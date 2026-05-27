@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>考研每日打卡</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+        .container {
+            max-width: 480px;
+            width: 100%;
+            margin: 20px auto;
+        }
+        .header {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 30px 24px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+        .header h1 {
+            font-size: 26px;
+            color: #2d3748;
+            margin-bottom: 6px;
+        }
+        .header .subtitle {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .exam-countdown {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 12px;
+            padding: 16px;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .exam-countdown .label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        .exam-countdown .days {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 4px 0;
+        }
+        .exam-countdown .date {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 14px 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .stat-card .num {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-top: 2px;
+        }
+        .checkin-btn-wrap {
+            margin-bottom: 20px;
+        }
+        .checkin-btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        .checkin-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(102, 126, 234, 0.5); }
+        .checkin-btn:active { transform: translateY(0); }
+        .checkin-btn.done {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+        }
+        .checkin-btn:disabled { cursor: not-allowed; opacity: 0.8; transform: none !important; }
+        .calendar {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .calendar-header .month {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .calendar-header .nav-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #667eea;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+        .calendar-header .nav-btn:hover { background: #f0f0ff; }
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        .weekdays span {
+            text-align: center;
+            font-size: 12px;
+            color: #a0aec0;
+            padding: 6px 0;
+        }
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            border-radius: 10px;
+            cursor: default;
+            color: #4a5568;
+            position: relative;
+        }
+        .day-cell.other-month { color: #e2e8f0; }
+        .day-cell.today { font-weight: bold; color: #667eea; }
+        .day-cell.checked {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            font-weight: bold;
+        }
+        .day-cell.today.checked { box-shadow: 0 0 0 2px white, 0 0 0 4px #48bb78; }
+        .day-cell .streak-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #f6ad55;
+            color: white;
+            font-size: 9px;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .records {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+        .records h3 {
+            font-size: 16px;
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+        .record-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0ff;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        .record-item:last-child { border-bottom: none; }
+        .record-item .time { color: #a0aec0; font-size: 12px; }
+        .record-item .tag {
+            background: #ebf4ff;
+            color: #667eea;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .empty-records {
+            text-align: center;
+            color: #cbd5e0;
+            padding: 30px 0;
+            font-size: 14px;
+        }
+        .reset-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 16px;
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 12px;
+            color: #fc8181;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .reset-btn:hover { background: #fed7d7; }
+        .toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-80px);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 999;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .note-input-area {
+            margin-bottom: 20px;
+        }
+        .note-input-area textarea {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 14px;
+            resize: none;
+            height: 80px;
+            font-family: inherit;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .note-input-area textarea:focus { border-color: #667eea; }
+        .note-input-area textarea::placeholder { color: #cbd5e0; }
+        .progress-bar-wrap {
+            background: #edf2f7;
+            border-radius: 10px;
+            height: 8px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+        .streak-fire {
+            display: inline-block;
+            animation: fire 1s ease-in-out infinite alternate;
+        }
+        @keyframes fire {
+            from { transform: scale(1); }
+            to { transform: scale(1.15); }
+        }
+    </style>
+</head>
+<body>
+    <div class="toast" id="toast"></div>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>📚 考研每日打卡</h1>
+            <div class="subtitle">坚持每一天，上岸在眼前</div>
+            <div class="exam-countdown" id="countdown">
+                <div class="label">📅 距离考研还有</div>
+                <div class="days" id="daysLeft">--</div>
+                <div class="date" id="examDate">2025年12月20日</div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="num" id="totalDays">0</div>
+                    <div class="label">总打卡</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="streakDays">0</div>
+                    <div class="label">🔥 连续</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="thisMonthDays">0</div>
+                    <div class="label">本月</div>
+                </div>
+            </div>
+            <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="progressFill"></div>
+            </div>
+            <div style="text-align:center;font-size:12px;color:#a0aec0;">
+                本月打卡进度
+            </div>
+        </div>
+
+        <!-- 打卡按钮 -->
+        <div class="checkin-btn-wrap">
+            <button class="checkin-btn" id="checkinBtn" onclick="doCheckin()">
+                ✅ 点击打卡
+            </button>
+        </div>
+
+        <!-- 学习备注 -->
+        <div class="calendar">
+            <div class="note-input-area">
+                <textarea id="studyNote" placeholder="📝 今天学了什么？写个简短笔记吧..."></textarea>
+            </div>
+        </div>
+
+        <!-- 日历 -->
+        <div class="calendar">
+            <div class="calendar-header">
+                <button class="nav-btn" onclick="changeMonth(-1)">⟨</button>
+                <span class="month" id="currentMonth"></span>
+                <button class="nav-btn" onclick="changeMonth(1)">⟩</button>
+            </div>
+            <div class="weekdays">
+                <span>日</span><span>一</span><span>二</span><span>三</span>
+                <span>四</span><span>五</span><span>六</span>
+            </div>
+            <div class="days-grid" id="daysGrid"></div>
+        </div>
+
+        <!-- 打卡记录 -->
+        <div class="records">
+            <h3>📋 最近打卡记录</h3>
+            <div id="recordsList"></div>
+            <button class="reset-btn" onclick="resetAll()">🗑️ 清除所有数据</button>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'kaoyan_checkin_data';
+        let data = loadData();
+        let currentYear, currentMonth;
+
+        function loadData() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                try { return JSON.parse(raw); } catch(e) {}
+            }
+            return { records: [], notes: {} };
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function getDateStr(d) {
+            const date = d || new Date();
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function isChecked(dateStr) {
+            return data.records.includes(dateStr);
+        }
+
+        function getNote(dateStr) {
+            return data.notes[dateStr] || '';
+        }
+
+        function getDaysInMonth(year, month) {
+            return new Date(year, month + 1, 0).getDate();
+        }
+
+        function getFirstDayOfMonth(year, month) {
+            return new Date(year, month, 1).getDay();
+        }
+
+        function getToday() {
+            return new Date();
+        }
+
+        function calcStreak() {
+            if (data.records.length === 0) return 0;
+            const sorted = [...data.records].sort().reverse();
+            let streak = 0;
+            const today = getDateStr();
+            const todayDate = new Date(today);
+            
+            // 检查今天或昨天是否打卡
+            const firstRecord = sorted[0];
+            const diffDays = Math.floor((todayDate - new Date(firstRecord)) / (1000*60*60*24));
+            
+            if (diffDays > 1) return 0; // 超过1天没打卡，连续中断
+            
+            for (let i = 0; i < sorted.length; i++) {
+                const current = new Date(sorted[i]);
+                if (i === 0) {
+                    streak = 1;
+                    continue;
+                }
+                const prev = new Date(sorted[i-1]);
+                const diff = Math.floor((prev - current) / (1000*60*60*24));
+                if (diff === 1) {
+                    streak++;
+                } else {
+                    break;
+                }
+            }
+            return streak;
+        }
+
+        function getMonthDays(year, month) {
+            const prefix = `${year}-${String(month+1).padStart(2,'0')}`;
+            return data.records.filter(r => r.startsWith(prefix)).length;
+        }
+
+        function calcExamDays() {
+            const exam = new Date(2025, 11, 20); // 2025-12-20
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const diff = Math.ceil((exam - today) / (1000*60*60*24));
+            return diff > 0 ? diff : 0;
+        }
+
+        function calcProgress() {
+            const today = new Date();
+            const daysInMonth = getDaysInMonth(today.getFullYear(), today.getMonth());
+            const checked = getMonthDays(today.getFullYear(), today.getMonth());
+            return Math.min(100, Math.round((checked / daysInMonth) * 100));
+        }
+
+        function renderAll() {
+            renderCalendar();
+            renderStats();
+            renderRecords();
+            renderButton();
+            renderCountdown();
+        }
+
+        function renderCountdown() {
+            const days = calcExamDays();
+            document.getElementById('daysLeft').textContent = days + ' 天';
+        }
+
+        function renderStats() {
+            const total = data.records.length;
+            const streak = calcStreak();
+            const today = new Date();
+            const monthDays = getMonthDays(today.getFullYear(), today.getMonth());
+            
+            document.getElementById('totalDays').textContent = total;
+            document.getElementById('streakDays').textContent = streak;
+            document.getElementById('thisMonthDays').textContent = monthDays;
+            
+            const progress = calcProgress();
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function renderCalendar() {
+            const today = getToday();
+            if (!currentYear || !currentMonth) {
+                currentYear = today.getFullYear();
+                currentMonth = today.getMonth();
+            }
+            
+            const monthNames = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+            document.getElementById('currentMonth').textContent = `${currentYear}年 ${monthNames[currentMonth]}`;
+            
+            const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+            const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
+            const prevMonthDays = getDaysInMonth(currentYear, currentMonth - 1);
+            
+            let html = '';
+            
+            // 上月补充
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = prevMonthDays - i;
+                html += `<div class="day-cell other-month">${day}</div>`;
+            }
+            
+            // 本月
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const isToday = dateStr === getDateStr();
+                const checked = isChecked(dateStr);
+                let cls = 'day-cell';
+                if (isToday) cls += ' today';
+                if (checked) cls += ' checked';
+                
+                let badge = '';
+                if (checked) {
+                    const note = getNote(dateStr);
+                    if (note) badge = `<span class="streak-badge" title="${note}">📝</span>`;
+                }
+                
+                html += `<div class="${cls}">${d}${badge}</div>`;
+            }
+            
+            // 下月补充
+            const totalCells = firstDay + daysInMonth;
+            const remaining = (7 - totalCells % 7) % 7;
+            for (let d = 1; d <= remaining; d++) {
+                html += `<div class="day-cell other-month">${d}</div>`;
+            }
+            
+            document.getElementById('daysGrid').innerHTML = html;
+        }
+
+        function renderRecords() {
+            const sorted = [...data.records].sort().reverse().slice(0, 20);
+            const container = document.getElementById('recordsList');
+            
+            if (sorted.length === 0) {
+                container.innerHTML = '<div class="empty-records">📌 还没有打卡记录，开始你的第一天吧！</div>';
+                return;
+            }
+            
+            container.innerHTML = sorted.map(dateStr => {
+                const d = new Date(dateStr);
+                const timeStr = `${d.getMonth()+1}月${d.getDate()}日`;
+                const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
+                const weekday = weekdays[d.getDay()];
+                const note = getNote(dateStr);
+                return `
+                    <div class="record-item">
+                        <div>
+                            <span style="font-weight:600;">${timeStr}</span>
+                            <span class="time"> ${weekday}</span>
+                            ${note ? `<br><span style="font-size:12px;color:#a0aec0;">${note}</span>` : ''}
+                        </div>
+                        <span class="tag">✅ 已打卡</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderButton() {
+            const btn = document.getElementById('checkinBtn');
+            const today = getDateStr();
+            if (isChecked(today)) {
+                btn.textContent = '✅ 今日已打卡';
+                btn.classList.add('done');
+                btn.disabled = true;
+            } else {
+                btn.textContent = '📌 点击打卡';
+                btn.classList.remove('done');
+                btn.disabled = false;
+            }
+        }
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            renderCalendar();
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function doCheckin() {
+            const today = getDateStr();
+            if (isChecked(today)) {
+                showToast('今天已经打过卡啦！');
+                return;
+            }
+            
+            const note = document.getElementById('studyNote').value.trim();
+            
+            data.records.push(today);
+            if (note) {
+                data.notes[today] = note;
+            }
+            saveData();
+            
+            renderAll();
+            
+            const streak = calcStreak();
+            if (streak >= 7 && streak % 7 === 0) {
+                showToast(`🎉 太棒了！连续打卡 ${streak} 天！继续保持！`);
+            } else if (streak >= 3 && streak % 3 === 0) {
+                showToast(`🔥 连续打卡 ${streak} 天！加油！`);
+            } else {
+                showToast(`✅ 打卡成功！`);
+            }
+            
+            document.getElementById('studyNote').value = '';
+        }
+
+        function resetAll() {
+            if (confirm('确定要清除所有打卡数据吗？此操作不可恢复！')) {
+                if (confirm('再次确认：真的要清除所有数据吗？')) {
+                    data = { records: [], notes: {} };
+                    saveData();
+                    renderAll();
+                    showToast('已清除所有数据');
+                }
+            }
+        }
+
+        // 初始化
+        renderAll();
+    </script>
+</body>
+</html>
