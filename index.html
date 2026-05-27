@@ -6,13 +6,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a1a2e">
-    <title>考研上岸 - 每日打卡</title>
+    <title>研友同行 - 考研多人学习平台</title>
     <link rel="manifest" href="manifest.json">
     <style>
         :root {
             --bg: #0f0f23;
             --card: #1a1a2e;
             --card2: #16213e;
+            --card3: #1e2a45;
             --primary: #6c63ff;
             --primary-light: #8b83ff;
             --primary-dark: #4a42d4;
@@ -20,6 +21,9 @@
             --accent2: #ffc857;
             --green: #2ecc71;
             --green2: #27ae60;
+            --orange: #f39c12;
+            --red: #e74c3c;
+            --blue: #3498db;
             --text: #e8e8e8;
             --text2: #a0a0b8;
             --text3: #6c6c80;
@@ -40,15 +44,81 @@
         }
         ::-webkit-scrollbar{display:none;}
 
+        /* ===== 登录注册 ===== */
+        .auth-overlay{
+            position:fixed;inset:0;z-index:9999;
+            background:linear-gradient(135deg,#0f0f23 0%,#1a0a2e 50%,#0f1f3f 100%);
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            padding:24px;transition:opacity 0.5s,transform 0.5s;
+        }
+        .auth-overlay.hidden{opacity:0;transform:scale(1.05);pointer-events:none;}
+        .auth-logo{font-size:64px;margin-bottom:12px;animation:float 3s ease-in-out infinite;}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+        .auth-title{
+            font-size:28px;font-weight:800;
+            background:linear-gradient(135deg,var(--primary-light),var(--accent));
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+            margin-bottom:4px;
+        }
+        .auth-subtitle{font-size:14px;color:var(--text2);margin-bottom:32px;}
+        .auth-box{
+            background:var(--card);border-radius:var(--radius);
+            padding:24px;width:100%;max-width:380px;
+            border:1px solid rgba(255,255,255,0.05);
+        }
+        .auth-tabs{display:flex;gap:0;margin-bottom:20px;border-radius:10px;overflow:hidden;background:var(--card2);}
+        .auth-tab{
+            flex:1;padding:10px;text-align:center;border:none;
+            background:transparent;color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;
+            transition:all 0.2s;
+        }
+        .auth-tab.active{background:var(--primary);color:#fff;}
+        .auth-input{
+            width:100%;padding:14px 16px;border-radius:12px;border:2px solid var(--card2);
+            background:var(--card2);color:var(--text);font-size:15px;outline:none;
+            margin-bottom:12px;transition:border-color 0.2s;
+        }
+        .auth-input:focus{border-color:var(--primary);}
+        .auth-input::placeholder{color:var(--text3);}
+        .auth-btn{
+            width:100%;padding:14px;border:none;border-radius:12px;
+            background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+            color:#fff;font-size:16px;font-weight:700;cursor:pointer;
+            transition:all 0.2s;margin-top:4px;
+        }
+        .auth-btn:active{transform:scale(0.97);}
+        .auth-btn.secondary{background:var(--card2);color:var(--text);}
+        .auth-error{color:var(--red);font-size:13px;text-align:center;margin-top:8px;display:none;}
+        .user-switcher{
+            position:fixed;top:12px;right:12px;z-index:100;
+            display:flex;align-items:center;gap:8px;
+            background:var(--card);padding:6px 12px 6px 6px;border-radius:20px;
+            border:1px solid rgba(255,255,255,0.08);cursor:pointer;
+        }
+        .user-switcher .avatar{font-size:20px;}
+        .user-switcher .name{font-size:12px;color:var(--text2);max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .user-switcher .dropdown{font-size:10px;color:var(--text3);}
+        .user-dropdown{
+            position:fixed;top:54px;right:12px;z-index:100;
+            background:var(--card);border-radius:12px;border:1px solid rgba(255,255,255,0.08);
+            padding:8px;min-width:180px;display:none;box-shadow:var(--shadow);
+        }
+        .user-dropdown.show{display:block;}
+        .user-dropdown .u-item{
+            display:flex;align-items:center;gap:10px;padding:10px 12px;
+            border-radius:10px;cursor:pointer;transition:background 0.2s;
+            font-size:14px;
+        }
+        .user-dropdown .u-item:hover{background:var(--card2);}
+        .user-dropdown .u-item .check{color:var(--green);margin-left:auto;}
+        .user-dropdown .divider{height:1px;background:rgba(255,255,255,0.06);margin:6px 0;}
+        .user-dropdown .u-item.logout{color:var(--red);}
+
         /* ===== 状态栏 ===== */
         .status-bar{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            padding:12px 20px 8px;
-            font-size:11px;
-            color:var(--text2);
-            letter-spacing:0.5px;
+            display:flex;justify-content:space-between;align-items:center;
+            padding:12px 20px 8px;font-size:11px;
+            color:var(--text2);letter-spacing:0.5px;
         }
         .status-bar .time{font-weight:600;}
         .status-icons{display:flex;gap:4px;align-items:center;}
@@ -57,966 +127,751 @@
         /* ===== Header ===== */
         .app-header{
             padding:4px 20px 16px;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
+            display:flex;justify-content:space-between;align-items:center;
         }
         .app-header .greeting h2{
-            font-size:22px;
-            font-weight:700;
+            font-size:22px;font-weight:700;
             background:linear-gradient(135deg,var(--primary-light),var(--accent));
-            -webkit-background-clip:text;
-            -webkit-text-fill-color:transparent;
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
         }
-        .app-header .greeting p{
-            font-size:13px;
-            color:var(--text2);
-            margin-top:2px;
-        }
+        .app-header .greeting p{font-size:13px;color:var(--text2);margin-top:2px;}
         .header-actions{display:flex;gap:10px;}
         .icon-btn{
-            width:40px;height:40px;
-            border-radius:50%;
-            border:none;
-            background:var(--card);
-            color:var(--text);
-            font-size:18px;
-            cursor:pointer;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            transition:all 0.2s;
-            box-shadow:0 2px 12px rgba(0,0,0,0.2);
+            width:40px;height:40px;border-radius:50%;border:none;
+            background:var(--card);color:var(--text);font-size:18px;
+            cursor:pointer;display:flex;align-items:center;justify-content:center;
+            transition:all 0.2s;box-shadow:0 2px 12px rgba(0,0,0,0.2);
         }
         .icon-btn:active{transform:scale(0.9);}
 
-        /* ===== 倒计时卡片 ===== */
+        /* ===== 倒计时 ===== */
         .countdown-card{
             margin:0 16px;
             background:linear-gradient(135deg,#1a1a3e 0%,#2a1a3e 50%,#1a2a3e 100%);
-            border-radius:var(--radius);
-            padding:20px;
-            position:relative;
-            overflow:hidden;
-            border:1px solid rgba(108,99,255,0.15);
+            border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;
         }
-        .countdown-card::before{
-            content:'';
-            position:absolute;
-            top:-50%;
-            right:-20%;
-            width:200px;height:200px;
-            background:radial-gradient(circle,rgba(108,99,255,0.12),transparent);
-            border-radius:50%;
+        .countdown-card::after{
+            content:'';position:absolute;top:-50%;right:-20%;
+            width:120px;height:120px;border-radius:50%;
+            background:rgba(108,99,255,0.08);
         }
-        .countdown-card .top-row{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            position:relative;z-index:1;
-        }
-        .countdown-card .label{
-            font-size:13px;
-            color:var(--text2);
-            font-weight:500;
-        }
-        .countdown-card .exam-date{
-            font-size:12px;
-            color:var(--text3);
-        }
-        .countdown-card .days-row{
-            display:flex;
-            align-items:baseline;
-            gap:4px;
-            margin-top:8px;
-            position:relative;z-index:1;
-        }
-        .countdown-card .days-num{
-            font-size:48px;
-            font-weight:800;
-            background:linear-gradient(135deg,#6c63ff,#ff6584);
-            -webkit-background-clip:text;
-            -webkit-text-fill-color:transparent;
-            line-height:1;
-        }
-        .countdown-card .days-unit{
-            font-size:16px;
-            color:var(--text2);
-            font-weight:500;
-        }
-        .countdown-card .progress-ring{
-            width:60px;height:60px;
-            position:relative;z-index:1;
-        }
+        .top-row{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;}
+        .top-row .label{font-size:13px;color:var(--text2);font-weight:600;}
+        .top-row .exam-date{font-size:12px;color:var(--primary-light);font-weight:600;}
+        .days-row{display:flex;align-items:flex-end;margin-top:4px;position:relative;z-index:1;}
+        .days-num{font-size:48px;font-weight:800;line-height:1;background:linear-gradient(135deg,#fff,var(--primary-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .days-unit{font-size:16px;color:var(--text2);margin-left:6px;padding-bottom:6px;}
 
-        /* ===== 学习统计 ===== */
+        /* ===== 统计 ===== */
         .stats-grid{
-            display:grid;
-            grid-template-columns:1fr 1fr 1fr 1fr;
-            gap:8px;
-            padding:16px;
+            display:grid;grid-template-columns:1fr 1fr 1fr 1fr;
+            gap:10px;margin:16px;padding:0;
         }
         .stat-item{
-            background:var(--card);
-            border-radius:var(--radius-sm);
-            padding:14px 8px;
-            text-align:center;
-            border:1px solid rgba(255,255,255,0.05);
+            background:var(--card);border-radius:var(--radius-sm);
+            padding:14px 8px;text-align:center;
+            border:1px solid rgba(255,255,255,0.03);
         }
-        .stat-item .num{
-            font-size:22px;
-            font-weight:700;
-            color:var(--primary-light);
-        }
-        .stat-item .stat-label{
-            font-size:11px;
-            color:var(--text3);
-            margin-top:2px;
-        }
-        .stat-item.highlight .num{color:var(--accent);}
+        .stat-item .num{font-size:22px;font-weight:800;}
+        .stat-item.highlight .num{color:var(--accent2);}
         .stat-item.green .num{color:var(--green);}
         .stat-item.gold .num{color:var(--accent2);}
+        .stat-item .stat-label{font-size:11px;color:var(--text3);margin-top:4px;}
 
         /* ===== 打卡按钮 ===== */
-        .checkin-section{
-            padding:8px 16px 16px;
-        }
+        .checkin-section{padding:0 16px;margin:16px 0 8px;}
         .checkin-btn{
-            width:100%;
-            padding:20px;
-            border:none;
-            border-radius:var(--radius);
-            font-size:18px;
-            font-weight:700;
-            cursor:pointer;
-            transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
-            background:linear-gradient(135deg,var(--primary),var(--accent));
-            color:white;
-            box-shadow:0 8px 30px rgba(108,99,255,0.35);
-            position:relative;
-            overflow:hidden;
-            letter-spacing:0.5px;
-        }
-        .checkin-btn::after{
-            content:'';
-            position:absolute;
-            top:0;left:0;right:0;bottom:0;
-            background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,0.1) 50%,transparent 70%);
-            pointer-events:none;
+            width:100%;padding:18px;border:none;border-radius:var(--radius);
+            font-size:18px;font-weight:700;cursor:pointer;
+            background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+            color:#fff;transition:all 0.3s;position:relative;overflow:hidden;
         }
         .checkin-btn:active{transform:scale(0.97);}
         .checkin-btn.done{
             background:linear-gradient(135deg,var(--green),var(--green2));
-            box-shadow:0 8px 30px rgba(46,204,113,0.35);
+            opacity:0.85;
         }
-        .checkin-btn.done:disabled{opacity:0.9;transform:none;}
 
-        /* ===== 今日学习 ===== */
+        /* ===== 学习计时器 ===== */
         .section-title{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            padding:16px 20px 8px;
+            display:flex;justify-content:space-between;align-items:center;
+            padding:20px 20px 10px;
         }
-        .section-title h3{
-            font-size:17px;
-            font-weight:700;
-        }
-        .section-title .more{
-            font-size:12px;
-            color:var(--primary-light);
-            cursor:pointer;
-        }
-
+        .section-title h3{font-size:16px;font-weight:700;}
+        .section-title .more{font-size:12px;color:var(--primary);cursor:pointer;}
         .study-timer-section{
-            margin:0 16px;
-            background:var(--card);
-            border-radius:var(--radius);
-            padding:16px;
-            border:1px solid rgba(255,255,255,0.05);
+            margin:0 16px;background:var(--card);border-radius:var(--radius);
+            padding:20px;text-align:center;
+            border:1px solid rgba(255,255,255,0.03);
         }
-        .timer-display{
-            text-align:center;
-            padding:12px 0;
-        }
+        .timer-display{margin-bottom:16px;}
         .timer-display .time{
-            font-size:42px;
-            font-weight:300;
-            font-variant-numeric:tabular-nums;
-            letter-spacing:2px;
-            color:var(--text);
+            font-size:56px;font-weight:800;font-variant-numeric:tabular-nums;
+            color:var(--text);letter-spacing:4px;transition:color 0.3s;
         }
-        .timer-display .time.active{
-            color:var(--green);
-        }
-        .timer-btns{
-            display:flex;
-            gap:10px;
-            justify-content:center;
-        }
+        .timer-display .time.active{color:var(--green);}
+        .timer-btns{display:flex;gap:12px;justify-content:center;margin-bottom:16px;}
         .timer-btn{
-            padding:10px 24px;
-            border-radius:30px;
-            border:none;
-            font-size:14px;
-            font-weight:600;
-            cursor:pointer;
-            transition:all 0.2s;
+            padding:12px 32px;border:none;border-radius:12px;
+            font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;
         }
-        .timer-btn.start{
-            background:var(--primary);
-            color:white;
+        .timer-btn:active{transform:scale(0.95);}
+        .timer-btn.start{background:var(--primary);color:#fff;}
+        .timer-btn.stop{background:var(--red);color:#fff;}
+        .timer-btn.reset{background:var(--card2);color:var(--text2);}
+        .pomodoro-mode{
+            display:flex;gap:8px;justify-content:center;margin-bottom:12px;
         }
-        .timer-btn.start:active{transform:scale(0.95);}
-        .timer-btn.stop{
-            background:var(--accent);
-            color:white;
+        .pomodoro-mode .pm-btn{
+            padding:6px 18px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);
+            background:transparent;color:var(--text2);font-size:12px;cursor:pointer;transition:all 0.2s;
         }
-        .timer-btn.reset{
-            background:var(--card2);
-            color:var(--text2);
-        }
+        .pomodoro-mode .pm-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
         .subject-tags{
-            display:flex;
-            gap:8px;
-            flex-wrap:wrap;
-            margin-top:12px;
+            display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
         }
         .subject-tag{
-            padding:6px 16px;
-            border-radius:20px;
-            font-size:12px;
-            font-weight:600;
-            cursor:pointer;
-            transition:all 0.2s;
-            border:1px solid rgba(255,255,255,0.1);
-            background:transparent;
-            color:var(--text2);
+            padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.08);
+            background:transparent;color:var(--text2);font-size:12px;cursor:pointer;transition:all 0.2s;
         }
-        .subject-tag.active{
-            background:var(--primary);
-            color:white;
-            border-color:var(--primary);
-        }
+        .subject-tag.active{background:var(--primary);color:#fff;border-color:var(--primary);}
         .subject-tag:active{transform:scale(0.95);}
 
-        /* ===== 本周打卡日历 ===== */
-        .week-calendar{
-            margin:0 16px;
-            background:var(--card);
-            border-radius:var(--radius);
-            padding:16px;
-            border:1px solid rgba(255,255,255,0.05);
-        }
-        .week-days{
-            display:flex;
-            justify-content:space-between;
-            margin-top:8px;
-        }
-        .week-day{
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            gap:6px;
-            flex:1;
-        }
-        .week-day .d{
-            font-size:12px;
-            color:var(--text3);
-            font-weight:500;
-        }
-        .week-day .circle{
-            width:36px;height:36px;
-            border-radius:50%;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:13px;
-            font-weight:600;
-            color:var(--text2);
-            background:var(--card2);
-            transition:all 0.3s;
-        }
-        .week-day .circle.today{
-            background:var(--primary);
-            color:white;
-            box-shadow:0 4px 12px rgba(108,99,255,0.3);
-        }
-        .week-day .circle.checked{
-            background:var(--green);
-            color:white;
-        }
-        .week-day .circle.today.checked{
-            background:var(--green);
-            box-shadow:0 4px 12px rgba(46,204,113,0.3);
-        }
-        .week-day .hours{
-            font-size:10px;
-            color:var(--text3);
-        }
-
-        /* ===== 主体日历 ===== */
-        .full-calendar{
-            margin:0 16px;
-            background:var(--card);
-            border-radius:var(--radius);
-            padding:16px;
-            border:1px solid rgba(255,255,255,0.05);
-        }
-        .cal-header{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            margin-bottom:12px;
-        }
-        .cal-header .month{
-            font-size:15px;
-            font-weight:600;
-        }
-        .cal-nav{
-            background:none;
-            border:none;
-            color:var(--text2);
-            font-size:18px;
-            cursor:pointer;
-            padding:4px 12px;
-            border-radius:8px;
-        }
-        .cal-nav:active{background:var(--card2);}
-        .weekdays-row{
-            display:grid;
-            grid-template-columns:repeat(7,1fr);
-            text-align:center;
-            font-size:11px;
-            color:var(--text3);
-            margin-bottom:8px;
-        }
-        .days-grid{
-            display:grid;
-            grid-template-columns:repeat(7,1fr);
-            gap:4px;
-        }
-        .day-cell{
-            aspect-ratio:1;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:13px;
-            border-radius:50%;
-            color:var(--text);
-            transition:all 0.2s;
-            cursor:default;
-            position:relative;
-        }
-        .day-cell.other{color:var(--text3);opacity:0.3;}
-        .day-cell.today{font-weight:700;color:var(--primary-light);}
-        .day-cell.checked{
-            background:var(--green);
-            color:white;
-            font-weight:700;
-        }
-        .day-cell.today.checked{
-            box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--green);
-        }
-        .day-cell .dot{
-            position:absolute;
-            bottom:4px;
-            width:4px;height:4px;
-            border-radius:50%;
-            background:var(--accent2);
-        }
-
-        /* ===== 打卡记录 ===== */
-        .records-section{
-            margin:0 16px 16px;
-            background:var(--card);
-            border-radius:var(--radius);
-            padding:16px;
-            border:1px solid rgba(255,255,255,0.05);
-        }
-        .record-item{
-            display:flex;
-            align-items:center;
-            gap:12px;
-            padding:12px 0;
-            border-bottom:1px solid rgba(255,255,255,0.05);
-        }
-        .record-item:last-child{border-bottom:none;}
-        .record-icon{
-            width:36px;height:36px;
-            border-radius:50%;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:16px;
-            background:var(--card2);
-            flex-shrink:0;
-        }
-        .record-info{flex:1;}
-        .record-info .date{
-            font-size:14px;
-            font-weight:600;
-        }
-        .record-info .detail{
-            font-size:12px;
-            color:var(--text3);
-            margin-top:2px;
-        }
-        .record-info .note{
-            font-size:12px;
-            color:var(--text2);
-            margin-top:4px;
-            font-style:italic;
-        }
-        .record-badge{
-            padding:4px 12px;
-            border-radius:12px;
-            font-size:11px;
-            font-weight:600;
-            background:rgba(46,204,113,0.15);
-            color:var(--green);
-        }
-
-        /* ===== 笔记输入 ===== */
-        .note-input-wrap{
-            margin:0 16px;
-        }
+        /* ===== 学习笔记输入 ===== */
+        .note-input-wrap{padding:0 16px;}
         .note-input-wrap textarea{
-            width:100%;
-            background:var(--card);
-            border:1px solid rgba(255,255,255,0.08);
-            border-radius:var(--radius-sm);
-            padding:14px;
-            font-size:14px;
-            color:var(--text);
-            font-family:inherit;
-            resize:none;
-            height:70px;
-            outline:none;
-            transition:border 0.2s;
+            width:100%;padding:14px;border-radius:var(--radius-sm);
+            border:2px solid var(--card2);background:var(--card);
+            color:var(--text);font-size:14px;resize:none;height:70px;outline:none;
+            font-family:inherit;transition:border-color 0.2s;
         }
         .note-input-wrap textarea:focus{border-color:var(--primary);}
         .note-input-wrap textarea::placeholder{color:var(--text3);}
 
-        /* ===== 底部导航 ===== */
-        .bottom-nav{
-            position:fixed;
-            bottom:0;
-            left:0;
-            right:0;
-            background:rgba(26,26,46,0.92);
-            backdrop-filter:blur(20px);
-            -webkit-backdrop-filter:blur(20px);
-            display:flex;
-            justify-content:space-around;
-            padding:8px 0 calc(8px + var(--safe-bottom));
-            border-top:1px solid rgba(255,255,255,0.06);
-            z-index:100;
+        /* ===== 今日心情/能量选择 ===== */
+        .mood-picker{
+            display:flex;gap:8px;padding:0 16px;margin:8px 0 0;justify-content:center;
         }
-        .nav-item{
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            gap:2px;
-            background:none;
-            border:none;
-            color:var(--text3);
-            font-size:10px;
-            cursor:pointer;
-            padding:4px 16px;
-            transition:color 0.2s;
+        .mood-picker .md-btn{
+            padding:8px 14px;border-radius:12px;border:1px solid transparent;
+            background:var(--card);color:var(--text2);font-size:16px;cursor:pointer;transition:all 0.2s;
         }
-        .nav-item .nav-icon{
-            font-size:22px;
-            line-height:1;
-        }
-        .nav-item.active{color:var(--primary-light);}
+        .mood-picker .md-btn.active{border-color:var(--primary);background:var(--card3);transform:scale(1.1);}
+        .mood-picker .md-btn:active{transform:scale(0.9);}
 
-        /* ===== Toast ===== */
-        .toast-container{
-            position:fixed;
-            top:60px;
-            left:50%;
-            transform:translateX(-50%);
-            z-index:999;
-            pointer-events:none;
+        /* ===== 本周概览 ===== */
+        .week-calendar{padding:0 16px;}
+        .week-days{display:flex;justify-content:space-between;}
+        .week-day{text-align:center;flex:1;}
+        .week-day .d{font-size:11px;color:var(--text3);margin-bottom:4px;}
+        .week-day .circle{
+            width:36px;height:36px;border-radius:50%;
+            display:flex;align-items:center;justify-content:center;
+            margin:0 auto;font-size:13px;font-weight:600;
+            background:var(--card);color:var(--text2);
+            transition:all 0.2s;
         }
-        .toast{
-            background:rgba(0,0,0,0.85);
-            backdrop-filter:blur(10px);
-            color:white;
-            padding:12px 24px;
-            border-radius:30px;
-            font-size:14px;
-            font-weight:500;
-            opacity:0;
-            transform:translateY(-20px) scale(0.95);
-            transition:all 0.4s cubic-bezier(0.4,0,0.2,1);
-            white-space:nowrap;
-            box-shadow:0 8px 32px rgba(0,0,0,0.3);
+        .week-day .circle.today{border:2px solid var(--primary);}
+        .week-day .circle.checked{background:var(--green);color:#fff;}
+        .week-day .hours{font-size:9px;color:var(--text3);margin-top:2px;}
+
+        /* ===== 全日历 ===== */
+        .full-calendar{
+            margin:0 16px;background:var(--card);border-radius:var(--radius);
+            padding:16px;border:1px solid rgba(255,255,255,0.03);
         }
-        .toast.show{
-            opacity:1;
-            transform:translateY(0) scale(1);
+        .cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+        .cal-header .month{font-size:15px;font-weight:700;}
+        .cal-nav{background:var(--card2);border:none;color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px;}
+        .weekdays-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:8px;}
+        .weekdays-row span{font-size:11px;color:var(--text3);padding:4px;}
+        .days-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+        .day-cell{
+            text-align:center;padding:8px 0;font-size:13px;border-radius:8px;
+            color:var(--text2);position:relative;cursor:default;
+        }
+        .day-cell.today{background:rgba(108,99,255,0.2);color:var(--primary-light);font-weight:700;}
+        .day-cell.checked{color:var(--green);font-weight:700;}
+        .day-cell.other{color:var(--text3);opacity:0.5;}
+        .day-cell .dot{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--primary);}
+
+        /* ===== 打卡记录 ===== */
+        .records-section{padding:0 16px;}
+        .record-item{
+            display:flex;align-items:center;gap:12px;
+            padding:14px;margin-bottom:8px;
+            background:var(--card);border-radius:var(--radius-sm);
+            border:1px solid rgba(255,255,255,0.03);
+        }
+        .record-icon{font-size:20px;}
+        .record-info{flex:1;}
+        .record-info .date{font-size:14px;font-weight:600;}
+        .record-info .detail{font-size:12px;color:var(--text2);margin-top:2px;}
+        .record-info .note{font-size:12px;color:var(--primary-light);font-style:italic;margin-top:1px;}
+        .record-info .mood-tag{font-size:10px;margin-top:2px;}
+        .record-badge{
+            font-size:11px;padding:4px 10px;border-radius:10px;
+            background:rgba(46,204,113,0.15);color:var(--green);white-space:nowrap;
         }
 
-        /* ===== 模态框 ===== */
+        /* ===== 科目分析 ===== */
+        .subject-breakdown{padding:0 16px;}
+        .subject-bar-item{
+            display:flex;align-items:center;gap:8px;margin-top:6px;
+        }
+        .subject-bar-item .sbj{width:50px;font-size:12px;color:var(--text2);}
+        .subject-bar-item .track{flex:1;height:6px;background:var(--card2);border-radius:3px;overflow:hidden;}
+        .subject-bar-item .fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--primary),var(--accent));transition:width 0.5s;}
+        .subject-bar-item .hours{font-size:11px;color:var(--text3);width:42px;text-align:right;}
+
+        /* ===== 空的占位 ===== */
+        .empty-state{text-align:center;padding:30px 20px;}
+        .empty-state .icon{font-size:48px;margin-bottom:10px;}
+        .empty-state .msg{font-size:14px;color:var(--text3);line-height:1.6;}
+
+        /* ===== 弹窗 ===== */
         .modal-overlay{
-            position:fixed;
-            top:0;left:0;right:0;bottom:0;
-            background:rgba(0,0,0,0.6);
-            backdrop-filter:blur(8px);
-            z-index:200;
-            display:none;
-            align-items:flex-end;
-            justify-content:center;
+            position:fixed;inset:0;z-index:1000;
+            background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);
+            display:flex;align-items:flex-end;justify-content:center;
+            visibility:hidden;opacity:0;transition:all 0.3s;
         }
-        .modal-overlay.show{display:flex;}
+        .modal-overlay.show{visibility:visible;opacity:1;}
         .modal-content{
-            background:var(--card);
-            border-radius:20px 20px 0 0;
-            padding:24px 20px calc(20px + var(--safe-bottom));
-            width:100%;
-            max-width:480px;
-            max-height:80vh;
-            overflow-y:auto;
-            animation:slideUp 0.3s ease;
-        }
-        @keyframes slideUp{
-            from{transform:translateY(100%);}
-            to{transform:translateY(0);}
-        }
-        .modal-handle{
-            width:40px;height:4px;
-            background:var(--text3);
-            border-radius:2px;
-            margin:0 auto 16px;
-        }
-        .modal-title{
-            font-size:18px;
-            font-weight:700;
-            margin-bottom:16px;
-            text-align:center;
-        }
-
-        /* ===== 设置页面 ===== */
-        .setting-item{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            padding:14px 0;
-            border-bottom:1px solid rgba(255,255,255,0.05);
-        }
-        .setting-item .left{
-            display:flex;
-            align-items:center;
-            gap:12px;
-        }
-        .setting-item .left .label{
-            font-size:14px;
-        }
-        .setting-item .left .desc{
-            font-size:11px;
-            color:var(--text3);
-        }
-        .toggle-switch{
-            width:48px;height:28px;
-            border-radius:14px;
-            background:var(--text3);
+            background:var(--card);border-radius:20px 20px 0 0;
+            width:100%;max-width:460px;max-height:80vh;overflow-y:auto;
+            padding:20px 20px calc(20px + var(--safe-bottom));
+            transform:translateY(100%);transition:transform 0.3s;
             position:relative;
-            cursor:pointer;
-            transition:all 0.3s;
         }
-        .toggle-switch.on{background:var(--primary);}
-        .toggle-switch::after{
-            content:'';
-            position:absolute;
-            top:3px;left:3px;
-            width:22px;height:22px;
-            border-radius:50%;
-            background:white;
-            transition:all 0.3s;
+        .modal-overlay.show .modal-content{transform:translateY(0);}
+        .modal-handle{width:36px;height:4px;border-radius:2px;background:var(--text3);margin:0 auto 16px;}
+        .modal-title{font-size:18px;font-weight:700;margin-bottom:16px;text-align:center;}
+        .modal-close{
+            position:absolute;top:16px;right:16px;
+            background:var(--card2);border:none;color:var(--text2);
+            width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;
         }
-        .toggle-switch.on::after{left:23px;}
+        .modal-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+        .modal-stat-item{
+            background:var(--card2);border-radius:10px;padding:14px;text-align:center;
+        }
+        .modal-stat-item .num{font-size:24px;font-weight:800;color:var(--primary-light);}
+        .modal-stat-item .lbl{font-size:12px;color:var(--text3);margin-top:2px;}
+        .modal-stat-item.gold .num{color:var(--accent2);}
+        .modal-stat-item.green .num{color:var(--green);}
+        .modal-stat-item.pink .num{color:var(--accent);}
+        .week-chart{display:flex;align-items:flex-end;justify-content:space-around;height:80px;gap:4px;padding:0 4px;}
+        .week-chart .mini-bar{
+            flex:1;border-radius:4px 4px 0 0;
+            background:var(--card3);min-height:4px;transition:height 0.5s;
+        }
+        .week-chart .mini-bar.filled{background:linear-gradient(180deg,var(--primary),var(--primary-light));}
+        .week-chart .mini-bar.today-bar{background:linear-gradient(180deg,var(--accent),var(--primary));}
 
-        /* ===== 分享动画 ===== */
-        .confetti-container{
-            position:fixed;
-            top:0;left:0;right:0;bottom:0;
-            pointer-events:none;
-            z-index:300;
-            overflow:hidden;
+        /* ===== 设置 ===== */
+        .setting-item{
+            display:flex;align-items:center;justify-content:space-between;
+            padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.04);
         }
-        .confetti{
-            position:absolute;
-            width:8px;height:8px;
-            border-radius:2px;
-            animation:confettiFall linear forwards;
+        .setting-item .left{display:flex;align-items:center;gap:12px;}
+        .setting-item .left .label{font-size:14px;font-weight:600;}
+        .setting-item .left .desc{font-size:11px;color:var(--text3);}
+        .toggle{
+            width:44px;height:24px;border-radius:12px;
+            background:var(--card3);position:relative;cursor:pointer;
+            transition:background 0.2s;border:none;flex-shrink:0;
         }
-        @keyframes confettiFall{
-            0%{transform:translateY(-10px) rotate(0deg);opacity:1;}
-            100%{transform:translateY(100vh) rotate(720deg);opacity:0;}
+        .toggle.on{background:var(--primary);}
+        .toggle::after{
+            content:'';position:absolute;top:2px;left:2px;
+            width:20px;height:20px;border-radius:50%;background:#fff;
+            transition:transform 0.2s;
+        }
+        .toggle.on::after{transform:translateX(20px);}
+        .goal-input-row{display:flex;gap:8px;margin-top:8px;}
+        .goal-input-row input{
+            flex:1;padding:10px 14px;border-radius:8px;border:2px solid var(--card2);
+            background:var(--card2);color:var(--text);font-size:13px;outline:none;
+        }
+        .goal-input-row input:focus{border-color:var(--primary);}
+        .goal-input-row button{
+            padding:10px 16px;border:none;border-radius:8px;
+            background:var(--primary);color:#fff;cursor:pointer;font-weight:600;font-size:13px;
         }
 
         /* ===== 密码弹窗 ===== */
-        .passcode-grid{
-            display:grid;
-            grid-template-columns:repeat(3,1fr);
-            gap:12px;
-            max-width:280px;
-            margin:0 auto;
-        }
+        .passcode-dots{display:flex;gap:12px;justify-content:center;margin:20px 0;}
+        .passcode-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--text3);transition:all 0.2s;}
+        .passcode-dot.filled{background:var(--primary);border-color:var(--primary);}
+        .passcode-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:260px;margin:0 auto;}
         .passcode-btn{
-            height:60px;
-            border-radius:50%;
-            border:none;
-            background:var(--card2);
-            color:var(--text);
-            font-size:22px;
-            font-weight:600;
-            cursor:pointer;
-            transition:all 0.2s;
+            aspect-ratio:1;border:none;border-radius:50%;
+            background:var(--card2);color:var(--text);
+            font-size:24px;font-weight:700;cursor:pointer;transition:all 0.1s;
         }
-        .passcode-btn:active{background:var(--primary);color:white;transform:scale(0.95);}
-        .passcode-dots{
-            display:flex;
-            justify-content:center;
-            gap:12px;
-            margin-bottom:20px;
-        }
-        .passcode-dot{
-            width:14px;height:14px;
-            border-radius:50%;
-            background:var(--card2);
-            transition:all 0.3s;
-        }
-        .passcode-dot.filled{background:var(--primary);}
+        .passcode-btn:active{background:var(--primary);transform:scale(0.9);}
 
-        .goal-input-group{
-            display:flex;
-            gap:8px;
-            align-items:center;
-            margin-top:8px;
+        /* ===== Toast ===== */
+        .toast-container{
+            position:fixed;top:60px;left:50%;transform:translateX(-50%);
+            z-index:9999;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;
         }
-        .goal-input-group input{
-            flex:1;
-            background:var(--card2);
-            border:1px solid rgba(255,255,255,0.08);
-            border-radius:10px;
-            padding:10px 14px;
-            color:var(--text);
-            font-size:14px;
-            outline:none;
+        .toast{
+            padding:12px 24px;border-radius:12px;background:rgba(26,26,46,0.95);
+            backdrop-filter:blur(10px);color:var(--text);font-size:14px;font-weight:600;
+            box-shadow:0 4px 20px rgba(0,0,0,0.4);
+            transition:all 0.4s;opacity:0;transform:translateY(-20px) scale(0.9);
+            white-space:nowrap;border:1px solid rgba(255,255,255,0.08);
         }
-        .goal-input-group input:focus{border-color:var(--primary);}
-        .goal-btn{
-            padding:10px 18px;
-            border-radius:10px;
-            border:none;
-            background:var(--primary);
-            color:white;
-            font-weight:600;
-            font-size:13px;
-            cursor:pointer;
+        .toast.show{opacity:1;transform:translateY(0) scale(1);}
+
+        /* ===== 彩纸 ===== */
+        .confetti-container{position:fixed;inset:0;pointer-events:none;z-index:9998;overflow:hidden;}
+        .confetti{position:absolute;top:-10px;border-radius:2px;animation:confettiFall linear forwards;}
+        @keyframes confettiFall{
+            0%{transform:translateY(0) rotate(0deg);opacity:1;}
+            100%{transform:translateY(100vh) rotate(720deg);opacity:0;}
         }
 
-        /* ===== 数据面板 ===== */
-        .data-grid{
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:8px;
-            margin-top:12px;
+        /* ===== 成就徽章 ===== */
+        .badge-section{padding:0 16px;}
+        .badge-grid{
+            display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+            background:var(--card);border-radius:var(--radius);padding:16px;
         }
-        .data-card{
-            background:var(--card2);
-            border-radius:var(--radius-sm);
-            padding:14px;
-        }
-        .data-card .val{
-            font-size:20px;
-            font-weight:700;
-        }
-        .data-card .lbl{
-            font-size:11px;
-            color:var(--text3);
-            margin-top:4px;
-        }
+        .badge-item{text-align:center;padding:10px 4px;border-radius:10px;background:var(--card2);transition:all 0.2s;}
+        .badge-item.locked{opacity:0.3;filter:grayscale(0.8);}
+        .badge-item.unlocked{background:linear-gradient(135deg,rgba(108,99,255,0.15),rgba(255,101,132,0.1));}
+        .badge-item .icon{font-size:28px;}
+        .badge-item .name{font-size:9px;color:var(--text2);margin-top:2px;}
 
-        /* ===== 图表简单柱状 ===== */
-        .mini-chart{
-            display:flex;
-            gap:4px;
-            align-items:flex-end;
-            height:60px;
-            padding-top:8px;
+        /* ===== 学习房间 ===== */
+        .study-room-section{margin:0 16px;}
+        .room-header{
+            background:var(--card);border-radius:var(--radius);padding:16px;
+            text-align:center;margin-bottom:12px;border:1px solid rgba(255,255,255,0.03);
         }
-        .mini-bar{
-            flex:1;
-            border-radius:3px 3px 0 0;
-            background:var(--primary);
-            opacity:0.5;
-            transition:all 0.3s;
-            min-height:4px;
+        .room-header .room-title{font-size:16px;font-weight:700;margin-bottom:4px;}
+        .room-header .room-count{font-size:13px;color:var(--text2);}
+        .room-header .room-count .online{color:var(--green);font-weight:700;}
+        .room-user-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+        .room-user{
+            display:flex;flex-direction:column;align-items:center;gap:2px;
+            padding:10px;background:var(--card2);border-radius:12px;min-width:64px;
+            position:relative;
         }
-        .mini-bar.filled{opacity:1;}
-        .mini-bar.today-bar{background:var(--green);opacity:1;}
+        .room-user .ru-avatar{font-size:24px;}
+        .room-user .ru-name{font-size:10px;color:var(--text2);}
+        .room-user .ru-status{font-size:8px;color:var(--green);display:flex;align-items:center;gap:3px;}
+        .room-user .ru-status .dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;}
+        @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+        .room-user .ru-hours{font-size:9px;color:var(--text3);}
 
-        /* ===== 响应式 ===== */
-        @media(min-width:480px){
-            body{max-width:480px;margin:0 auto!important;}
+        /* ===== 排行榜 ===== */
+        .leaderboard-section{padding:0 16px;}
+        .leaderboard-card{
+            background:var(--card);border-radius:var(--radius);padding:16px;
+            border:1px solid rgba(255,255,255,0.03);
         }
+        .leaderboard-card .lb-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+        .lb-tabs{display:flex;gap:8px;margin-bottom:12px;}
+        .lb-tab{
+            padding:6px 16px;border-radius:16px;border:none;
+            background:var(--card2);color:var(--text2);font-size:12px;cursor:pointer;transition:all 0.2s;
+        }
+        .lb-tab.active{background:var(--primary);color:#fff;}
+        .lb-item{
+            display:flex;align-items:center;gap:10px;
+            padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03);
+        }
+        .lb-item:last-child{border-bottom:none;}
+        .lb-rank{width:24px;font-size:14px;font-weight:700;text-align:center;}
+        .lb-rank.gold{color:#ffc857;}
+        .lb-rank.silver{color:#c0c0c0;}
+        .lb-rank.bronze{color:#cd7f32;}
+        .lb-name{flex:1;font-size:14px;color:var(--text);}
+        .lb-mood{font-size:12px;margin-right:4px;}
+        .lb-count{font-size:13px;color:var(--text3);font-weight:600;}
+        .lb-bar{width:60px;height:4px;background:var(--card2);border-radius:2px;overflow:hidden;}
+        .lb-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--primary),var(--accent));transition:width 0.5s;}
 
-        /* ===== 空状态 ===== */
-        .empty-state{
-            text-align:center;
-            padding:30px 0;
-            color:var(--text3);
+        /* ===== 成就弹窗 ===== */
+        .achieve-popup{
+            position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);
+            z-index:10000;
+            background:linear-gradient(135deg,#1a1a3e,#2a1a3e);
+            border-radius:var(--radius);padding:32px 24px;text-align:center;
+            border:2px solid var(--accent2);box-shadow:0 20px 60px rgba(0,0,0,0.5);
+            transition:all 0.5s cubic-bezier(0.34,1.56,0.64,1);
+            max-width:300px;
         }
-        .empty-state .icon{font-size:40px;margin-bottom:8px;}
-        .empty-state .msg{font-size:13px;}
+        .achieve-popup.show{transform:translate(-50%,-50%) scale(1);}
+        .achieve-popup .icon{font-size:64px;margin-bottom:8px;}
+        .achieve-popup .title{font-size:20px;font-weight:800;color:var(--accent2);}
+        .achieve-popup .desc{font-size:14px;color:var(--text2);margin-top:4px;}
+
+        /* ===== 底部导航 ===== */
+        .bottom-nav{
+            position:fixed;bottom:0;left:0;right:0;
+            display:flex;justify-content:space-around;align-items:center;
+            background:rgba(26,26,46,0.95);backdrop-filter:blur(12px);
+            padding:8px 8px calc(8px + var(--safe-bottom));
+            border-top:1px solid rgba(255,255,255,0.05);
+            z-index:500;
+        }
+        .nav-item{
+            display:flex;flex-direction:column;align-items:center;gap:2px;
+            padding:6px 16px;border:none;background:transparent;
+            color:var(--text3);font-size:10px;cursor:pointer;
+            transition:all 0.2s;border-radius:12px;
+        }
+        .nav-item .icon{font-size:22px;transition:transform 0.2s;}
+        .nav-item.active{color:var(--primary);}
+        .nav-item.active .icon{transform:scale(1.1);}
+        .nav-item:active .icon{transform:scale(0.85);}
+
+        /* ===== 页面切换 ===== */
+        .page{display:none;}
+        .page.active{display:block;}
+        #pageHome{display:block;}
+
+        /* ===== 社交动态 ===== */
+        .feed-section{padding:0 16px;}
+        .feed-item{
+            display:flex;align-items:flex-start;gap:12px;
+            padding:14px;background:var(--card);border-radius:var(--radius-sm);
+            margin-bottom:8px;border:1px solid rgba(255,255,255,0.03);
+        }
+        .feed-item .fi-avatar{font-size:28px;}
+        .feed-item .fi-content{flex:1;}
+        .feed-item .fi-name{font-size:13px;font-weight:600;}
+        .feed-item .fi-name .tag{font-size:10px;color:var(--text3);font-weight:400;margin-left:6px;}
+        .feed-item .fi-text{font-size:12px;color:var(--text2);margin-top:2px;}
+        .feed-item .fi-time{font-size:10px;color:var(--text3);margin-top:4px;}
+        .feed-item .fi-like{font-size:12px;cursor:pointer;color:var(--text3);display:flex;align-items:center;gap:4px;}
+        .feed-item .fi-like.liked{color:var(--accent);}
+
+        /* ===== 个人主页 ===== */
+        .profile-card{
+            margin:0 16px;background:var(--card);border-radius:var(--radius);
+            padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.03);
+        }
+        .profile-card .avatar{font-size:48px;margin-bottom:8px;}
+        .profile-card .name{font-size:20px;font-weight:700;}
+        .profile-card .bio{font-size:13px;color:var(--text2);margin-top:2px;}
+        .profile-card .school{font-size:12px;color:var(--primary-light);margin-top:4px;}
+        .profile-stats{display:flex;gap:12px;justify-content:center;margin:16px 0;}
+        .profile-stats .ps-item{text-align:center;min-width:60px;}
+        .profile-stats .ps-item .num{font-size:18px;font-weight:800;}
+        .profile-stats .ps-item .lbl{font-size:10px;color:var(--text3);}
+
+        /* ===== 每日任务清单 ===== */
+        .todo-section{padding:0 16px;}
+        .todo-item{
+            display:flex;align-items:center;gap:12px;
+            padding:12px 14px;background:var(--card);border-radius:var(--radius-sm);
+            margin-bottom:6px;border:1px solid rgba(255,255,255,0.03);
+        }
+        .todo-item .todo-check{
+            width:20px;height:20px;border-radius:50%;
+            border:2px solid var(--text3);cursor:pointer;flex-shrink:0;
+            display:flex;align-items:center;justify-content:center;
+            transition:all 0.2s;font-size:10px;
+        }
+        .todo-item .todo-check.done{background:var(--green);border-color:var(--green);color:#fff;}
+        .todo-item .todo-text{flex:1;font-size:14px;}
+        .todo-item .todo-text.done{text-decoration:line-through;color:var(--text3);}
+        .todo-item .todo-del{font-size:14px;color:var(--text3);cursor:pointer;padding:4px;}
+        .todo-add-row{display:flex;gap:8px;margin-top:8px;}
+        .todo-add-row input{
+            flex:1;padding:12px 14px;border-radius:10px;border:2px solid var(--card2);
+            background:var(--card2);color:var(--text);font-size:13px;outline:none;
+        }
+        .todo-add-row input:focus{border-color:var(--primary);}
+        .todo-add-row button{padding:12px 20px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:700;cursor:pointer;}
+
+        @media (min-width:500px){
+            body{max-width:460px;margin:0 auto;border-left:1px solid rgba(255,255,255,0.05);border-right:1px solid rgba(255,255,255,0.05);}
+        }
     </style>
 </head>
 <body>
 
+<!-- ===== 登录页 ===== -->
+<div class="auth-overlay" id="authOverlay">
+    <div class="auth-logo">📚</div>
+    <div class="auth-title">研友同行</div>
+    <div class="auth-subtitle">考研人的多人学习平台 · 互相监督共同上岸</div>
+    <div class="auth-box">
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="loginTab" onclick="switchAuthTab('login')">登录</button>
+            <button class="auth-tab" id="registerTab" onclick="switchAuthTab('register')">注册</button>
+        </div>
+        <div id="authLoginForm">
+            <input class="auth-input" id="loginUser" placeholder="用户名" autocomplete="off">
+            <input class="auth-input" id="loginPass" type="password" placeholder="密码" autocomplete="off">
+            <button class="auth-btn" onclick="doLogin()">登 录</button>
+            <div class="auth-error" id="loginError"></div>
+        </div>
+        <div id="authRegisterForm" style="display:none;">
+            <input class="auth-input" id="regUser" placeholder="给自己取个名字吧" autocomplete="off">
+            <input class="auth-input" id="regPass" type="password" placeholder="设置密码（至少4位）" autocomplete="off">
+            <input class="auth-input" id="regSchool" placeholder="🎯 目标院校（选填）" autocomplete="off">
+            <div class="mood-picker" style="justify-content:center;margin-bottom:12px;padding:0;">
+                <span style="font-size:12px;color:var(--text3);margin-right:8px;">选个头像：</span>
+                <button class="md-btn active" onclick="selectRegAvatar(this,'🧑‍🎓')">🧑‍🎓</button>
+                <button class="md-btn" onclick="selectRegAvatar(this,'👨‍💻')">👨‍💻</button>
+                <button class="md-btn" onclick="selectRegAvatar(this,'👩‍🎓')">👩‍🎓</button>
+                <button class="md-btn" onclick="selectRegAvatar(this,'🐯')">🐯</button>
+                <button class="md-btn" onclick="selectRegAvatar(this,'🚀')">🚀</button>
+            </div>
+            <button class="auth-btn" onclick="doRegister()">注 册</button>
+            <div class="auth-error" id="regError"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 成就弹窗 ===== -->
+<div class="achieve-popup" id="achievePopup">
+    <div class="icon" id="achieveIcon">🏆</div>
+    <div class="title" id="achieveTitle">成就解锁！</div>
+    <div class="desc" id="achieveDesc">继续加油！</div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 <div class="confetti-container" id="confettiContainer"></div>
+
+<!-- ===== 用户切换 ===== -->
+<div class="user-switcher" id="userSwitcher" onclick="toggleUserDropdown()">
+    <span class="avatar" id="currentUserAvatar">🧑‍🎓</span>
+    <span class="name" id="currentUserName">用户</span>
+    <span class="dropdown">▼</span>
+</div>
+<div class="user-dropdown" id="userDropdown">
+    <div id="userList"></div>
+    <div class="divider"></div>
+    <div class="u-item logout" onclick="doLogout()">🚪 退出登录</div>
+</div>
 
 <!-- ===== 状态栏 ===== -->
 <div class="status-bar">
     <span class="time" id="statusTime">00:00</span>
-    <span style="font-weight:600;">📚 考研上岸</span>
-    <div class="status-icons">
-        <span>📶</span><span>📶</span><span>🔋</span>
-    </div>
+    <span style="font-weight:600;">📚 研友同行</span>
+    <div class="status-icons"><span>📶</span><span>📶</span><span>🔋</span></div>
 </div>
 
-<!-- ===== Header ===== -->
-<div class="app-header">
-    <div class="greeting">
-        <h2 id="greetingText">早上好 ☀️</h2>
-        <p id="mottoText">每天进步一点点</p>
+<!-- ===== 页面：首页 ===== -->
+<div class="page active" id="pageHome">
+    <div class="app-header">
+        <div class="greeting">
+            <h2 id="greetingText">早上好 ☀️</h2>
+            <p id="mottoText">每天进步一点点</p>
+        </div>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="openModal('statsModal')">📊</button>
+            <button class="icon-btn" onclick="openModal('settingsModal')">⚙️</button>
+        </div>
     </div>
-    <div class="header-actions">
-        <button class="icon-btn" onclick="openModal('statsModal')">📊</button>
-        <button class="icon-btn" onclick="openModal('settingsModal')">⚙️</button>
+
+    <div class="countdown-card">
+        <div class="top-row">
+            <span class="label">🎯 考研倒计时</span>
+            <span class="exam-date">2025.12.20</span>
+        </div>
+        <div class="days-row">
+            <span class="days-num" id="daysLeft">0</span>
+            <span class="days-unit">天</span>
+        </div>
     </div>
+
+    <div class="stats-grid">
+        <div class="stat-item"><div class="num" id="statTotal">0</div><div class="stat-label">总打卡</div></div>
+        <div class="stat-item highlight"><div class="num" id="statStreak">0</div><div class="stat-label">🔥 连续</div></div>
+        <div class="stat-item green"><div class="num" id="statHours">0</div><div class="stat-label">⏱ 学时</div></div>
+        <div class="stat-item gold"><div class="num" id="statMonth">0</div><div class="stat-label">📅 本月</div></div>
+    </div>
+
+    <div class="checkin-section">
+        <button class="checkin-btn" id="checkinBtn" onclick="doCheckin()">📌 今日打卡</button>
+    </div>
+
+    <div class="section-title"><h3>⏱ 番茄专注</h3></div>
+    <div class="study-timer-section">
+        <div class="pomodoro-mode">
+            <button class="pm-btn active" data-mode="pomo" onclick="setPomoMode('pomo')">🍅 专注</button>
+            <button class="pm-btn" data-mode="short" onclick="setPomoMode('short')">☕ 短休</button>
+            <button class="pm-btn" data-mode="long" onclick="setPomoMode('long')">🌴 长休</button>
+        </div>
+        <div class="timer-display"><div class="time" id="timerDisplay">25:00</div></div>
+        <div class="timer-btns">
+            <button class="timer-btn start" id="timerStartBtn" onclick="toggleTimer()">▶ 开始</button>
+            <button class="timer-btn reset" onclick="resetTimer()">↺ 重置</button>
+        </div>
+        <div class="subject-tags" id="subjectTags">
+            <button class="subject-tag active" data-subject="政治">📖 政治</button>
+            <button class="subject-tag" data-subject="英语">🇬🇧 英语</button>
+            <button class="subject-tag" data-subject="数学">📐 数学</button>
+            <button class="subject-tag" data-subject="专业课">🔬 专业课</button>
+        </div>
+    </div>
+
+    <div class="section-title"><h3>📝 学习记录</h3></div>
+    <div class="note-input-wrap">
+        <textarea id="studyNote" placeholder="今天学了什么？写下来加深记忆..."></textarea>
+    </div>
+    <div class="mood-picker">
+        <span style="font-size:12px;color:var(--text3);">今日心情：</span>
+        <button class="md-btn" data-mood="😊" onclick="selectMood(this)">😊</button>
+        <button class="md-btn" data-mood="😤" onclick="selectMood(this)">😤</button>
+        <button class="md-btn" data-mood="😴" onclick="selectMood(this)">😴</button>
+        <button class="md-btn" data-mood="🤯" onclick="selectMood(this)">🤯</button>
+        <button class="md-btn" data-mood="💪" onclick="selectMood(this)">💪</button>
+    </div>
+
+    <div class="section-title"><h3>📅 本周打卡</h3></div>
+    <div class="week-calendar"><div class="week-days" id="weekDays"></div></div>
+
+    <div class="section-title"><h3>📆 打卡日历</h3><span class="more" onclick="document.getElementById('fullCal').scrollIntoView({behavior:'smooth'})">查看全部</span></div>
+    <div class="full-calendar" id="fullCal">
+        <div class="cal-header">
+            <button class="cal-nav" onclick="changeMonth(-1)">◀</button>
+            <span class="month" id="calMonth"></span>
+            <button class="cal-nav" onclick="changeMonth(1)">▶</button>
+        </div>
+        <div class="weekdays-row"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+        <div class="days-grid" id="daysGrid"></div>
+    </div>
+
+    <div class="section-title"><h3>📋 打卡记录</h3></div>
+    <div class="records-section"><div id="recordsList"></div></div>
+
+    <div class="section-title"><h3>📊 科目分析</h3></div>
+    <div class="subject-breakdown" id="subjectBreakdown"></div>
 </div>
 
-<!-- ===== 倒计时 ===== -->
-<div class="countdown-card">
-    <div class="top-row">
-        <span class="label">🎯 考研倒计时</span>
-        <span class="exam-date">2025.12.20</span>
+<!-- ===== 页面：自习室 ===== -->
+<div class="page" id="pageRoom">
+    <div class="section-title" style="padding-top:20px;"><h3>🏫 线上自习室</h3></div>
+    <div class="study-room-section">
+        <div class="room-header">
+            <div class="room-title">📚 考研冲刺自习室</div>
+            <div class="room-count">当前在线：<span class="online" id="onlineCount">0</span> 人</div>
+        </div>
+        <div class="room-user-list" id="roomUserList">
+            <div class="empty-state" style="padding:20px;"><div class="msg">暂无在线研友</div></div>
+        </div>
+        <div style="margin-top:16px;">
+            <button class="auth-btn" onclick="joinStudyRoom()" id="roomJoinBtn" style="padding:12px;">🚪 进入自习室学习</button>
+        </div>
     </div>
-    <div class="days-row">
-        <span class="days-num" id="daysLeft">0</span>
-        <span class="days-unit">天</span>
-        <span style="flex:1;"></span>
-    </div>
+    <div class="section-title" style="padding-top:20px;"><h3>🔥 研友动态</h3></div>
+    <div class="feed-section"><div id="feedList"></div></div>
 </div>
 
-<!-- ===== 统计四格 ===== -->
-<div class="stats-grid">
-    <div class="stat-item">
-        <div class="num" id="statTotal">0</div>
-        <div class="stat-label">总打卡</div>
+<!-- ===== 页面：排行榜 ===== -->
+<div class="page" id="pageRank">
+    <div class="section-title" style="padding-top:20px;"><h3>🏆 研友排行榜</h3></div>
+    <div class="leaderboard-section">
+        <div class="leaderboard-card">
+            <div class="lb-title">👑 研友排行</div>
+            <div class="lb-tabs">
+                <button class="lb-tab active" data-lb="weekly" onclick="switchLB('weekly')">本周</button>
+                <button class="lb-tab" data-lb="monthly" onclick="switchLB('monthly')">本月</button>
+                <button class="lb-tab" data-lb="alltime" onclick="switchLB('alltime')">总榜</button>
+            </div>
+            <div id="lbList"></div>
+        </div>
     </div>
-    <div class="stat-item highlight">
-        <div class="num" id="statStreak">0</div>
-        <div class="stat-label">🔥 连续</div>
-    </div>
-    <div class="stat-item green">
-        <div class="num" id="statHours">0</div>
-        <div class="stat-label">⏱ 学时</div>
-    </div>
-    <div class="stat-item gold">
-        <div class="num" id="statMonth">0</div>
-        <div class="stat-label">📅 本月</div>
-    </div>
+    <div class="section-title"><h3>🎖️ 我的成就</h3></div>
+    <div class="badge-section"><div class="badge-grid" id="badgeGrid"></div></div>
 </div>
 
-<!-- ===== 打卡按钮 ===== -->
-<div class="checkin-section">
-    <button class="checkin-btn" id="checkinBtn" onclick="doCheckin()">
-        📌 今日打卡
-    </button>
-</div>
-
-<!-- ===== 学习计时器 ===== -->
-<div class="section-title">
-    <h3>⏱ 学习计时</h3>
-</div>
-<div class="study-timer-section">
-    <div class="timer-display">
-        <div class="time" id="timerDisplay">00:00:00</div>
+<!-- ===== 页面：个人 ===== -->
+<div class="page" id="pageProfile">
+    <div class="section-title" style="padding-top:20px;"><h3>👤 个人主页</h3></div>
+    <div class="profile-card">
+        <div class="avatar" id="profileAvatar">🧑‍🎓</div>
+        <div class="name" id="profileName">用户</div>
+        <div class="bio" id="profileBio">考研人，正在努力中！</div>
+        <div class="school" id="profileSchool">🎯 目标院校：未设置</div>
+        <div class="profile-stats">
+            <div class="ps-item"><div class="num" id="profileDays">0</div><div class="lbl">打卡天数</div></div>
+            <div class="ps-item"><div class="num" id="profileHours">0</div><div class="lbl">学习时长</div></div>
+            <div class="ps-item"><div class="num" id="profileStreak">0</div><div class="lbl">最长连续</div></div>
+        </div>
     </div>
-    <div class="timer-btns">
-        <button class="timer-btn start" id="timerStartBtn" onclick="toggleTimer()">▶ 开始</button>
-        <button class="timer-btn reset" onclick="resetTimer()">↺ 重置</button>
+    <div class="section-title"><h3>📋 每日任务</h3></div>
+    <div class="todo-section">
+        <div id="todoList"></div>
+        <div class="todo-add-row">
+            <input id="todoInput" placeholder="添加今日任务..." onkeydown="if(event.key==='Enter')addTodo()">
+            <button onclick="addTodo()">添加</button>
+        </div>
     </div>
-    <div class="subject-tags" id="subjectTags">
-        <button class="subject-tag active" data-subject="政治">📖 政治</button>
-        <button class="subject-tag" data-subject="英语">🇬🇧 英语</button>
-        <button class="subject-tag" data-subject="数学">📐 数学</button>
-        <button class="subject-tag" data-subject="专业课">🔬 专业课</button>
+    <div class="section-title"><h3>⚙️ 设置</h3></div>
+    <div style="margin:0 16px;background:var(--card);border-radius:var(--radius);padding:16px;">
+        <div class="setting-item">
+            <div class="left"><div><div class="label">🔔 每日提醒</div></div></div>
+            <button class="toggle on" id="notificationToggle" onclick="toggleNotification()"></button>
+        </div>
+        <div class="setting-item">
+            <div class="left"><div><div class="label">🔒 隐私模式</div><div class="desc">开启后需密码进入</div></div></div>
+            <button class="toggle" id="privacyToggle" onclick="togglePrivacy()"></button>
+        </div>
+        <div class="setting-item" style="cursor:pointer;" onclick="exportData()">
+            <div class="left"><span>📤</span><div><div class="label">导出数据</div></div></div>
+        </div>
+        <div class="setting-item" style="cursor:pointer;" onclick="importData()">
+            <div class="left"><span>📥</span><div><div class="label">导入数据</div></div></div>
+        </div>
+        <div class="setting-item" style="cursor:pointer;" onclick="confirmReset()">
+            <div class="left"><span>🗑️</span><div><div class="label" style="color:var(--red);">清除所有数据</div><div class="desc">⚠️ 不可恢复</div></div></div>
+        </div>
+        <div style="text-align:center;margin-top:20px;font-size:12px;color:var(--text3);">研友同行 v3.0 · 多人学习平台</div>
     </div>
-</div>
-
-<!-- ===== 今日学习笔记 ===== -->
-<div class="section-title">
-    <h3>📝 学习笔记</h3>
-</div>
-<div class="note-input-wrap">
-    <textarea id="studyNote" placeholder="今天学了什么？写下来加深记忆..."></textarea>
-</div>
-
-<!-- ===== 本周概览 ===== -->
-<div class="section-title" style="padding-top:20px;">
-    <h3>📅 本周打卡</h3>
-</div>
-<div class="week-calendar">
-    <div class="week-days" id="weekDays"></div>
-</div>
-
-<!-- ===== 全日历 ===== -->
-<div class="section-title">
-    <h3>📆 打卡日历</h3>
-    <span class="more" onclick="document.getElementById('fullCal').scrollIntoView({behavior:'smooth'})">查看全部</span>
-</div>
-<div class="full-calendar" id="fullCal">
-    <div class="cal-header">
-        <button class="cal-nav" onclick="changeMonth(-1)">◀</button>
-        <span class="month" id="calMonth"></span>
-        <button class="cal-nav" onclick="changeMonth(1)">▶</button>
-    </div>
-    <div class="weekdays-row">
-        <span>日</span><span>一</span><span>二</span><span>三</span>
-        <span>四</span><span>五</span><span>六</span>
-    </div>
-    <div class="days-grid" id="daysGrid"></div>
-</div>
-
-<!-- ===== 打卡记录 ===== -->
-<div class="section-title">
-    <h3>📋 打卡记录</h3>
-</div>
-<div class="records-section" id="recordsSection">
-    <div id="recordsList"></div>
 </div>
 
 <!-- ===== 底部导航 ===== -->
 <div class="bottom-nav">
-    <button class="nav-item active" onclick="scrollToTop()">
-        <span class="nav-icon">🏠</span>
-        <span>首页</span>
-    </button>
-    <button class="nav-item" onclick="openModal('statsModal')">
-        <span class="nav-icon">📊</span>
-        <span>统计</span>
-    </button>
-    <button class="nav-item" onclick="openModal('goalModal')">
-        <span class="nav-icon">🎯</span>
-        <span>目标</span>
-    </button>
-    <button class="nav-item" onclick="openModal('settingsModal')">
-        <span class="nav-icon">⚙️</span>
-        <span>设置</span>
-    </button>
+    <button class="nav-item active" onclick="switchPage('home')"><span class="icon">🏠</span>首页</button>
+    <button class="nav-item" onclick="switchPage('room')"><span class="icon">🏫</span>自习室</button>
+    <button class="nav-item" onclick="switchPage('rank')"><span class="icon">🏆</span>排行榜</button>
+    <button class="nav-item" onclick="switchPage('profile')"><span class="icon">👤</span>我的</button>
 </div>
 
 <!-- ===== 统计弹窗 ===== -->
 <div class="modal-overlay" id="statsModal">
     <div class="modal-content">
-        <div class="modal-handle" onclick="closeModal('statsModal')"></div>
+        <button class="modal-close" onclick="closeModal('statsModal')">✕</button>
+        <div class="modal-handle"></div>
         <div class="modal-title">📊 学习统计</div>
-        <div class="data-grid">
-            <div class="data-card"><div class="val total-checkins">0</div><div class="lbl">总打卡次数</div></div>
-            <div class="data-card"><div class="val total-hours">0</div><div class="lbl">总学习时间(h)</div></div>
-            <div class="data-card"><div class="val best-streak">0</div><div class="lbl">最长连续</div></div>
-            <div class="data-card"><div class="val avg-hours">0</div><div class="lbl">日均学时</div></div>
+        <div class="modal-stat-grid">
+            <div class="modal-stat-item"><div class="num total-checkins">0</div><div class="lbl">总打卡天数</div></div>
+            <div class="modal-stat-item gold"><div class="num total-hours">0</div><div class="lbl">总学习时长</div></div>
+            <div class="modal-stat-item green"><div class="num best-streak">0</div><div class="lbl">最长连续</div></div>
+            <div class="modal-stat-item pink"><div class="num avg-hours">0</div><div class="lbl">日均学习(h)</div></div>
         </div>
-        <div class="section-title" style="padding:16px 0 4px;"><h3>⏰ 本周学习趋势</h3></div>
-        <div class="mini-chart" id="weekChart"></div>
-        <div class="section-title" style="padding:16px 0 4px;"><h3>📚 各科学习时间</h3></div>
-        <div id="subjectBreakdown"></div>
-        <button class="checkin-btn" style="margin-top:16px;padding:14px;font-size:14px;" onclick="exportData()">📤 导出数据备份</button>
-        <button class="checkin-btn" style="margin-top:8px;padding:14px;font-size:14px;background:linear-gradient(135deg,#e74c3c,#c0392b);" onclick="importData()">📥 导入数据恢复</button>
-    </div>
-</div>
-
-<!-- ===== 目标弹窗 ===== -->
-<div class="modal-overlay" id="goalModal">
-    <div class="modal-content">
-        <div class="modal-handle" onclick="closeModal('goalModal')"></div>
-        <div class="modal-title">🎯 考研目标</div>
-        <div class="setting-item">
-            <div class="left">
-                <span>🎓</span>
-                <div><div class="label">目标院校</div><div class="desc">你梦想的学校</div></div>
-            </div>
-        </div>
-        <div class="goal-input-group">
-            <input type="text" id="targetSchool" placeholder="例如：清华大学" value="">
-            <button class="goal-btn" onclick="saveTargetSchool()">保存</button>
-        </div>
-        <div class="setting-item">
-            <div class="left">
-                <span>📚</span>
-                <div><div class="label">每日目标学时</div><div class="desc" id="dailyGoalDisplay">当前：8 小时</div></div>
-            </div>
-        </div>
-        <div class="goal-input-group">
-            <input type="number" id="dailyGoalInput" placeholder="小时" value="8" min="1" max="24">
-            <button class="goal-btn" onclick="saveDailyGoal()">设定</button>
-        </div>
-        <div class="setting-item">
-            <div class="left">
-                <span>🏆</span>
-                <div><div class="label">连续打卡目标</div><div class="desc" id="streakGoalDisplay">当前：30 天</div></div>
-            </div>
-        </div>
-        <div class="goal-input-group">
-            <input type="number" id="streakGoalInput" placeholder="天数" value="30" min="1">
-            <button class="goal-btn" onclick="saveStreakGoal()">设定</button>
-        </div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:8px;">本周专注时间</div>
+        <div class="week-chart" id="weekChart"></div>
     </div>
 </div>
 
 <!-- ===== 设置弹窗 ===== -->
 <div class="modal-overlay" id="settingsModal">
     <div class="modal-content">
-        <div class="modal-handle" onclick="closeModal('settingsModal')"></div>
-        <div class="modal-title">⚙️ 设置</div>
-        <div class="setting-item">
-            <div class="left">
-                <span>🌙</span>
-                <div><div class="label">深色模式</div><div class="desc">已默认开启</div></div>
-            </div>
-            <div class="toggle-switch on"></div>
+        <button class="modal-close" onclick="closeModal('settingsModal')">✕</button>
+        <div class="modal-handle"></div>
+        <div class="modal-title">⚙️ 快捷设置</div>
+        <input class="auth-input" id="targetSchoolInput" placeholder="输入目标院校名称" style="margin-bottom:8px;">
+        <button class="auth-btn" onclick="saveTargetSchool()" style="padding:10px;font-size:14px;">保存目标院校</button>
+        <div style="height:12px;"></div>
+        <div class="setting-item"><div class="left"><div><div class="label">⏰ 每日学习目标</div></div></div></div>
+        <div class="goal-input-row">
+            <input type="number" id="dailyGoalInput" placeholder="小时" min="1" max="24">
+            <button onclick="saveDailyGoal()">设置</button>
         </div>
-        <div class="setting-item">
-            <div class="left">
-                <span>🔔</span>
-                <div><div class="label">每日提醒</div><div class="desc">每晚 21:00 提醒打卡</div></div>
-            </div>
-            <div class="toggle-switch on" id="notificationToggle" onclick="toggleNotification()"></div>
-        </div>
-        <div class="setting-item">
-            <div class="left">
-                <span>🔒</span>
-                <div><div class="label">隐私模式</div><div class="desc">进入需密码验证</div></div>
-            </div>
-            <div class="toggle-switch" id="privacyToggle" onclick="togglePrivacy()"></div>
-        </div>
-        <div class="setting-item" style="cursor:pointer;" onclick="confirmReset()">
-            <div class="left">
-                <span>🗑️</span>
-                <div><div class="label" style="color:#e74c3c;">清除所有数据</div><div class="desc">⚠️ 不可恢复</div></div>
-            </div>
-        </div>
-        <div style="text-align:center;margin-top:20px;font-size:12px;color:var(--text3);">
-            考研上岸 v2.0 · Made with ❤️
-        </div>
+        <div style="font-size:12px;color:var(--text3);margin-top:6px;" id="dailyGoalDisplay">当前目标：8 小时/天</div>
     </div>
 </div>
 
@@ -1049,629 +904,526 @@
 </div>
 
 <script>
-    // ========== 数据层 ==========
-    const STORAGE_KEY = 'kaoyan_app_data';
-    const PASSCODE_KEY = 'kaoyan_passcode';
+// ============================================================
+//  多用户数据层
+// ============================================================
+const USERS_KEY = 'yy_users_db';
+const CURRENT_USER_KEY = 'yy_current_user';
 
-    let data = loadData();
-    let currentYear, currentMonth;
-    let timerInterval = null;
-    let timerSeconds = 0;
-    let timerRunning = false;
-    let currentSubject = '政治';
-    let passcodeInput = '';
-    let privacyUnlocked = false;
+let usersDB = loadUsersDB();
+let currentUser = loadCurrentUser();
+let currentYear, currentMonth;
+let timerInterval = null;
+let timerSeconds = 0;
+let timerRunning = false;
+let timerMode = 'pomo';
+const POMO_TIMES = { pomo: 25*60, short: 5*60, long: 15*60 };
+let currentSubject = '政治';
+let selectedMood = '';
+let passcodeInput = '';
+let privacyUnlocked = false;
+let selectedRegAvatar = '🧑‍🎓';
+let currentLB = 'weekly';
+let lastCheckinAchievements = [];
 
-    function getDefaultData() {
-        return {
-            records: [],        // ['2025-07-15', ...]
-            notes: {},          // {'2025-07-15': '学习了xxx'}
-            timerLogs: [],       // [{date,subject,seconds}]
-            targetSchool: '',
-            dailyGoal: 8,
-            streakGoal: 30,
-            notificationEnabled: true,
-            privacyEnabled: false,
-            passcode: '',
-            created: new Date().toISOString()
-        };
+function loadUsersDB() {
+    try { const raw = localStorage.getItem(USERS_KEY); if (raw) return JSON.parse(raw); } catch(e) {}
+    return {};
+}
+function saveUsersDB() { localStorage.setItem(USERS_KEY, JSON.stringify(usersDB)); }
+function loadCurrentUser() {
+    const name = localStorage.getItem(CURRENT_USER_KEY);
+    if (name && usersDB[name]) return name;
+    return null;
+}
+function saveCurrentUser(name) { localStorage.setItem(CURRENT_USER_KEY, name); currentUser = name; }
+
+function getDefaultUserData() {
+    return {
+        records: [], notes: {}, moods: {}, timerLogs: [],
+        targetSchool: '', dailyGoal: 8, streakGoal: 30,
+        notificationEnabled: true, privacyEnabled: false, passcode: '',
+        created: new Date().toISOString(), todos: [], todoDone: {}, badges: [], pomoCount: 0, likedFeeds: []
+    };
+}
+
+let data = null;
+let currentUserInfo = null;
+
+function initUserSession() {
+    if (!currentUser || !usersDB[currentUser]) {
+        document.getElementById('authOverlay').classList.remove('hidden');
+        return false;
     }
-
-    function loadData() {
-        try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                const parsed = JSON.parse(raw);
-                // 确保所有字段存在
-                const def = getDefaultData();
-                for (let k in def) { if (!(k in parsed)) parsed[k] = def[k]; }
-                return parsed;
-            }
-        } catch(e) {}
-        return getDefaultData();
-    }
-
-    function saveData() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
-
-    // ========== 工具函数 ==========
-    function getDateStr(d) {
-        const date = d || new Date();
-        return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-    }
-
-    function isChecked(dateStr) {
-        return data.records.includes(dateStr);
-    }
-
-    function getDaysInMonth(y,m) { return new Date(y,m+1,0).getDate(); }
-    function getFirstDay(y,m) { return new Date(y,m,1).getDay(); }
-
-    function calcStreak() {
-        if (!data.records.length) return 0;
-        const sorted = [...data.records].sort().reverse();
-        let streak = 0;
-        const today = new Date();
-        const firstRecord = new Date(sorted[0]);
-        const diffDays = Math.floor((today - firstRecord) / (1000*60*60*24));
-        if (diffDays > 1) return 0;
-        for (let i = 0; i < sorted.length; i++) {
-            const curr = new Date(sorted[i]);
-            if (i === 0) { streak = 1; continue; }
-            const prev = new Date(sorted[i-1]);
-            const diff = Math.floor((prev - curr) / (1000*60*60*24));
-            if (diff === 1) streak++;
-            else break;
-        }
-        return streak;
-    }
-
-    function calcBestStreak() {
-        if (!data.records.length) return 0;
-        const sorted = [...data.records].sort();
-        let best = 1, current = 1;
-        for (let i = 1; i < sorted.length; i++) {
-            const diff = Math.floor((new Date(sorted[i]) - new Date(sorted[i-1])) / (1000*60*60*24));
-            if (diff === 1) { current++; best = Math.max(best, current); }
-            else current = 1;
-        }
-        return best;
-    }
-
-    function getTotalHours() {
-        return data.timerLogs.reduce((sum, log) => sum + log.seconds, 0) / 3600;
-    }
-
-    function getMonthDays(y,m) {
-        const prefix = `${y}-${String(m+1).padStart(2,'0')}`;
-        return data.records.filter(r => r.startsWith(prefix)).length;
-    }
-
-    function getMonthHours(y,m) {
-        const prefix = `${y}-${String(m+1).padStart(2,'0')}`;
-        return data.timerLogs.filter(l => l.date.startsWith(prefix)).reduce((s,l) => s + l.seconds, 0) / 3600;
-    }
-
-    function calcExamDays() {
-        const exam = new Date(2025, 11, 20);
-        const today = new Date();
-        today.setHours(0,0,0,0);
-        return Math.max(0, Math.ceil((exam - today) / (1000*60*60*24)));
-    }
-
-    // ========== 渲染 ==========
-    function renderAll() {
-        renderGreeting();
-        renderCountdown();
-        renderStats();
-        renderButton();
-        renderWeekDays();
-        renderCalendar();
-        renderRecords();
-        renderSubjectBreakdown();
-    }
-
-    function renderGreeting() {
-        const h = new Date().getHours();
-        let greet, emoji;
-        if (h < 6) { greet = '凌晨了还不睡？'; emoji = '🌙'; }
-        else if (h < 9) { greet = '早上好'; emoji = '☀️'; }
-        else if (h < 12) { greet = '上午好'; emoji = '🌤️'; }
-        else if (h < 14) { greet = '中午好'; emoji = '☀️'; }
-        else if (h < 18) { greet = '下午好'; emoji = '🌇'; }
-        else if (h < 22) { greet = '晚上好'; emoji = '🌆'; }
-        else { greet = '夜深了，注意休息'; emoji = '🌙'; }
-        document.getElementById('greetingText').textContent = `${greet} ${emoji}`;
-
-        const mottos = [
-            '每天进步一点点', '坚持就是胜利', '考研人，考研魂',
-            '今天你学习了吗？', '未来的研究生', '乾坤未定，你我皆是黑马',
-            '星光不负赶路人', '越努力，越幸运', '加油！上岸人'
-        ];
-        document.getElementById('mottoText').textContent = mottos[Math.floor(Math.random() * mottos.length)];
-        document.getElementById('statusTime').textContent = 
-            `${String(h).padStart(2,'0')}:${String(new Date().getMinutes()).padStart(2,'0')}`;
-    }
-
-    function renderCountdown() {
-        document.getElementById('daysLeft').textContent = calcExamDays();
-    }
-
-    function renderStats() {
-        const total = data.records.length;
-        const streak = calcStreak();
-        const hours = getTotalHours();
-        const today = new Date();
-        const monthDays = getMonthDays(today.getFullYear(), today.getMonth());
-
-        document.getElementById('statTotal').textContent = total;
-        document.getElementById('statStreak').textContent = streak;
-        document.getElementById('statHours').textContent = Math.round(hours);
-        document.getElementById('statMonth').textContent = monthDays;
-    }
-
-    function renderButton() {
-        const btn = document.getElementById('checkinBtn');
-        if (isChecked(getDateStr())) {
-            btn.textContent = '✅ 今日已打卡 · 很棒！';
-            btn.classList.add('done');
-            btn.disabled = true;
-        } else {
-            btn.textContent = '📌 点击打卡 · 开始学习';
-            btn.classList.remove('done');
-            btn.disabled = false;
-        }
-    }
-
-    function renderWeekDays() {
-        const today = new Date();
-        const dayOfWeek = today.getDay(); // 0=Sun
-        const container = document.getElementById('weekDays');
-        const weekDays = ['日','一','二','三','四','五','六'];
-        let html = '';
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date(today);
-            d.setDate(today.getDate() - i);
-            const dateStr = getDateStr(d);
-            const isToday = i === 0;
-            const checked = isChecked(dateStr);
-            const dayHours = data.timerLogs.filter(l => l.date === dateStr).reduce((s,l) => s + l.seconds, 0);
-            const hoursStr = dayHours > 0 ? Math.round(dayHours/60) + 'm' : '';
-            let cls = 'circle';
-            if (isToday) cls += ' today';
-            if (checked) cls += ' checked';
-            html += `
-                <div class="week-day">
-                    <div class="d">${weekDays[(dayOfWeek - i + 7) % 7]}</div>
-                    <div class="${cls}">${d.getDate()}</div>
-                    <div class="hours">${hoursStr}</div>
-                </div>
-            `;
-        }
-        container.innerHTML = html;
-    }
-
-    function renderCalendar() {
-        const today = new Date();
-        if (!currentYear || !currentMonth) {
-            currentYear = today.getFullYear();
-            currentMonth = today.getMonth();
-        }
-        const monthNames = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
-        document.getElementById('calMonth').textContent = `${currentYear}年 ${monthNames[currentMonth]}`;
-
-        const daysInMonth = getDaysInMonth(currentYear, currentMonth);
-        const firstDay = getFirstDay(currentYear, currentMonth);
-        const prevMonthDays = getDaysInMonth(currentYear, currentMonth - 1);
-
-        let html = '';
-        for (let i = firstDay - 1; i >= 0; i--) {
-            html += `<div class="day-cell other">${prevMonthDays - i}</div>`;
-        }
-        for (let d = 1; d <= daysInMonth; d++) {
-            const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const isToday = dateStr === getDateStr();
-            const checked = isChecked(dateStr);
-            let cls = 'day-cell';
-            if (dateStr < getDateStr() && currentYear <= today.getFullYear() && currentMonth <= today.getMonth()) cls += ' other';
-            if (isToday) cls += ' today';
-            if (checked) cls += ' checked';
-            const hasNote = data.notes[dateStr];
-            html += `<div class="${cls}">${d}${hasNote ? '<div class="dot"></div>' : ''}</div>`;
-        }
-        const total = firstDay + daysInMonth;
-        const remaining = (7 - total % 7) % 7;
-        for (let d = 1; d <= remaining; d++) {
-            html += `<div class="day-cell other">${d}</div>`;
-        }
-        document.getElementById('daysGrid').innerHTML = html;
-    }
-
-    function renderRecords() {
-        const sorted = [...data.records].sort().reverse().slice(0, 30);
-        const container = document.getElementById('recordsList');
-        if (!sorted.length) {
-            container.innerHTML = '<div class="empty-state"><div class="icon">📌</div><div class="msg">还没有打卡记录<br>从今天开始吧！</div></div>';
-            return;
-        }
-        container.innerHTML = sorted.map((dateStr, idx) => {
-            const d = new Date(dateStr);
-            const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
-            const dayHours = data.timerLogs.filter(l => l.date === dateStr).reduce((s,l) => s + l.seconds, 0);
-            const hoursStr = dayHours > 0 ? `学习 ${Math.round(dayHours/60)} 分钟` : '';
-            const note = data.notes[dateStr] || '';
-            const icons = ['🔥','⭐','💪','📚','🎯','✨','🌟','💯'];
-            return `
-                <div class="record-item" style="${idx === 0 ? 'background:rgba(108,99,255,0.05);border-radius:10px;margin:-4px;padding:16px;' : ''}">
-                    <div class="record-icon">${idx === 0 ? '🏆' : icons[idx % icons.length]}</div>
-                    <div class="record-info">
-                        <div class="date">${d.getMonth()+1}月${d.getDate()}日 ${weekdays[d.getDay()]}</div>
-                        ${hoursStr ? `<div class="detail">${hoursStr}</div>` : ''}
-                        ${note ? `<div class="note">"${note}"</div>` : ''}
-                    </div>
-                    <span class="record-badge">✅ 已打卡</span>
-                </div>
-            `;
-        }).join('');
-    }
-
-    function renderSubjectBreakdown() {
-        const container = document.getElementById('subjectBreakdown');
-        const subjects = ['政治','英语','数学','专业课'];
-        const hours = subjects.map(s => {
-            const total = data.timerLogs.filter(l => l.subject === s).reduce((sum, l) => sum + l.seconds, 0);
-            return { subject: s, hours: total / 3600 };
-        });
-        const totalH = hours.reduce((s, h) => s + h.hours, 0) || 1;
-        container.innerHTML = hours.map(h => `
-            <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-                <span style="width:50px;font-size:12px;color:var(--text2);">${h.subject}</span>
-                <div style="flex:1;height:6px;background:var(--card2);border-radius:3px;overflow:hidden;">
-                    <div style="height:100%;width:${(h.hours/totalH*100).toFixed(0)}%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;"></div>
-                </div>
-                <span style="font-size:11px;color:var(--text3);width:40px;text-align:right;">${h.hours.toFixed(1)}h</span>
-            </div>
-        `).join('') || '<div class="empty-state" style="padding:16px;"><div class="msg">暂无学习时间记录</div></div>';
-    }
-
-    // ========== 打卡 ==========
-    function doCheckin() {
-        const today = getDateStr();
-        if (isChecked(today)) {
-            showToast('今天已经打卡啦，继续加油！💪');
-            return;
-        }
-        const note = document.getElementById('studyNote').value.trim();
-        data.records.push(today);
-        if (note) data.notes[today] = note;
-        saveData();
-        renderAll();
-
-        const streak = calcStreak();
-        if (streak === 1) showToast('🎉 第一天打卡！好的开始！', true);
-        else if (streak === 7) showToast('🔥 连续7天！形成习惯啦！', true);
-        else if (streak === 30) showToast('🏆 连续30天！你是真正的考研人！', true);
-        else if (streak === 100) showToast('👑 连续100天！大神请收下膝盖！', true);
-        else if (streak % 10 === 0) showToast(`🌟 连续 ${streak} 天！太棒了！`, true);
-        else showToast('✅ 打卡成功！今天也要加油哦！', true);
-
-        document.getElementById('studyNote').value = '';
-        // 请求通知权限
-        if (data.notificationEnabled && 'Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
-        }
-    }
-
-    // ========== 计时器 ==========
-    function toggleTimer() {
-        const btn = document.getElementById('timerStartBtn');
-        if (timerRunning) {
-            // 停止
-            clearInterval(timerInterval);
-            timerRunning = false;
-            btn.textContent = '▶ 开始';
-            btn.className = 'timer-btn start';
-            // 记录学习时间
-            if (timerSeconds >= 60) {
-                data.timerLogs.push({
-                    date: getDateStr(),
-                    subject: currentSubject,
-                    seconds: timerSeconds
-                });
-                saveData();
-                showToast(`📚 学习了 ${Math.round(timerSeconds/60)} 分钟 ${currentSubject}`);
-                renderAll();
-            }
-        } else {
-            timerRunning = true;
-            btn.textContent = '⏹ 停止';
-            btn.className = 'timer-btn stop';
-            timerInterval = setInterval(() => {
-                timerSeconds++;
-                updateTimerDisplay();
-            }, 1000);
-        }
-    }
-
-    function resetTimer() {
-        clearInterval(timerInterval);
-        timerRunning = false;
-        timerSeconds = 0;
-        updateTimerDisplay();
-        document.getElementById('timerStartBtn').textContent = '▶ 开始';
-        document.getElementById('timerStartBtn').className = 'timer-btn start';
-    }
-
-    function updateTimerDisplay() {
-        const h = Math.floor(timerSeconds / 3600);
-        const m = Math.floor((timerSeconds % 3600) / 60);
-        const s = timerSeconds % 60;
-        const display = document.getElementById('timerDisplay');
-        display.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-        display.className = timerRunning ? 'time active' : 'time';
-    }
-
-    // ========== 科目选择 ==========
-    document.addEventListener('click', function(e) {
-        const tag = e.target.closest('.subject-tag');
-        if (tag) {
-            document.querySelectorAll('.subject-tag').forEach(t => t.classList.remove('active'));
-            tag.classList.add('active');
-            currentSubject = tag.dataset.subject;
-        }
-    });
-
-    // ========== 日历导航 ==========
-    function changeMonth(delta) {
-        currentMonth += delta;
-        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-        renderCalendar();
-    }
-
-    // ========== 弹窗 ==========
-    function openModal(id) {
-        document.getElementById(id).classList.add('show');
-        if (id === 'statsModal') {
-            renderStatsModal();
-        }
-        if (id === 'goalModal') {
-            document.getElementById('targetSchool').value = data.targetSchool || '';
-            document.getElementById('dailyGoalDisplay').textContent = `当前：${data.dailyGoal} 小时`;
-            document.getElementById('streakGoalDisplay').textContent = `当前：${data.streakGoal} 天`;
-        }
-    }
-
-    function closeModal(id) {
-        document.getElementById(id).classList.remove('show');
-    }
-
-    // 点击遮罩关闭
-    document.querySelectorAll('.modal-overlay').forEach(el => {
-        el.addEventListener('click', function(e) {
-            if (e.target === this) this.classList.remove('show');
-        });
-    });
-
-    function renderStatsModal() {
-        document.querySelector('#statsModal .total-checkins').textContent = data.records.length;
-        document.querySelector('#statsModal .total-hours').textContent = getTotalHours().toFixed(1);
-        document.querySelector('#statsModal .best-streak').textContent = calcBestStreak();
-        const daysSinceStart = data.records.length ? Math.ceil((new Date() - new Date(data.records[0])) / (1000*60*60*24)) + 1 : 1;
-        document.querySelector('#statsModal .avg-hours').textContent = daysSinceStart > 0 ? (getTotalHours() / daysSinceStart).toFixed(1) : '0';
-        
-        // 本周图表
-        const chart = document.getElementById('weekChart');
-        const today = new Date();
-        let chartHtml = '';
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date(today);
-            d.setDate(today.getDate() - i);
-            const dateStr = getDateStr(d);
-            const dayHours = data.timerLogs.filter(l => l.date === dateStr).reduce((s,l) => s + l.seconds, 0);
-            const maxH = 4; // 4小时为满
-            const pct = Math.min(100, (dayHours / 3600 / maxH) * 100);
-            chartHtml += `<div class="mini-bar ${dayHours > 0 ? 'filled' : ''} ${i === 0 ? 'today-bar' : ''}" style="height:${Math.max(4,pct)}%;"></div>`;
-        }
-        chart.innerHTML = chartHtml;
-    }
-
-    // ========== 目标设置 ==========
-    function saveTargetSchool() {
-        const val = document.getElementById('targetSchool').value.trim();
-        if (val) {
-            data.targetSchool = val;
-            saveData();
-            showToast('🎯 目标院校已保存！加油！');
-            closeModal('goalModal');
-        }
-    }
-
-    function saveDailyGoal() {
-        const val = parseInt(document.getElementById('dailyGoalInput').value);
-        if (val > 0 && val <= 24) {
-            data.dailyGoal = val;
-            saveData();
-            document.getElementById('dailyGoalDisplay').textContent = `当前：${val} 小时`;
-            showToast('✅ 每日目标已更新');
-        }
-    }
-
-    function saveStreakGoal() {
-        const val = parseInt(document.getElementById('streakGoalInput').value);
-        if (val > 0) {
-            data.streakGoal = val;
-            saveData();
-            document.getElementById('streakGoalDisplay').textContent = `当前：${val} 天`;
-            showToast('✅ 连续目标已更新');
-        }
-    }
-
-    // ========== 通知 ==========
-    function toggleNotification() {
-        data.notificationEnabled = !data.notificationEnabled;
-        saveData();
-        document.getElementById('notificationToggle').classList.toggle('on');
-        showToast(data.notificationEnabled ? '🔔 提醒已开启' : '🔕 提醒已关闭');
-        if (data.notificationEnabled && 'Notification' in window) {
-            Notification.requestPermission();
-        }
-    }
-
-    // ========== 隐私模式 ==========
-    function togglePrivacy() {
-        if (!data.privacyEnabled) {
-            // 开启 - 设置密码
-            data.privacyEnabled = true;
-            data.passcode = '1234';
-            saveData();
-            document.getElementById('privacyToggle').classList.add('on');
-            showToast('🔒 隐私模式已开启（默认密码：1234）');
-        } else {
-            // 关闭
-            data.privacyEnabled = false;
-            data.passcode = '';
-            saveData();
-            document.getElementById('privacyToggle').classList.remove('on');
-            showToast('🔓 隐私模式已关闭');
-        }
-    }
-
-    function inputPasscode(key) {
-        if (key === 'clear') {
-            passcodeInput = passcodeInput.slice(0, -1);
-        } else if (key === 'confirm') {
-            if (passcodeInput === data.passcode) {
-                privacyUnlocked = true;
-                closeModal('passcodeModal');
-                showToast('🔓 验证通过');
-                passcodeInput = '';
-            } else {
-                showToast('❌ 密码错误');
-                passcodeInput = '';
-            }
-        } else {
-            if (passcodeInput.length < 4) {
-                passcodeInput += key;
-            }
-        }
-        // 更新dots
-        const dots = document.querySelectorAll('#passcodeDots .passcode-dot');
-        dots.forEach((dot, i) => {
-            dot.classList.toggle('filled', i < passcodeInput.length);
-        });
-    }
-
-    // 页面加载时检查隐私
-    window.addEventListener('DOMContentLoaded', function() {
-        if (data.privacyEnabled && !privacyUnlocked) {
-            setTimeout(() => openModal('passcodeModal'), 300);
-        }
-    });
-
-    // ========== 数据导入导出 ==========
-    function exportData() {
-        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `kaoyan_backup_${getDateStr()}.json`;
-        a.click();
-        URL.revokeObjectURL(a.href);
-        showToast('📤 数据已导出');
-    }
-
-    function importData() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.onchange = function(e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (confirm('导入将覆盖当前数据，确定继续？')) {
-                        data = imported;
-                        saveData();
-                        renderAll();
-                        showToast('📥 数据已导入');
-                        closeModal('statsModal');
-                    }
-                } catch(e) {
-                    showToast('❌ 文件格式错误');
-                }
-            };
-            reader.readAsText(file);
-        };
-        input.click();
-    }
-
-    // ========== 重置 ==========
-    function confirmReset() {
-        if (confirm('⚠️ 确定要清除所有数据吗？')) {
-            if (confirm('再次确认：此操作不可恢复！')) {
-                data = getDefaultData();
-                saveData();
-                renderAll();
-                showToast('🗑️ 已清除所有数据');
-                closeModal('settingsModal');
-            }
-        }
-    }
-
-    // ========== Toast ==========
-    function showToast(msg, confetti) {
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = msg;
-        container.appendChild(toast);
-        requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 400);
-        }, 2200);
-        if (confetti) launchConfetti();
-    }
-
-    // ========== 彩纸特效 ==========
-    function launchConfetti() {
-        const container = document.getElementById('confettiContainer');
-        const colors = ['#6c63ff','#ff6584','#ffc857','#2ecc71','#e74c3c','#3498db','#f39c12'];
-        for (let i = 0; i < 60; i++) {
-            const el = document.createElement('div');
-            el.className = 'confetti';
-            el.style.left = Math.random() * 100 + '%';
-            el.style.background = colors[Math.floor(Math.random() * colors.length)];
-            el.style.width = (Math.random() * 6 + 4) + 'px';
-            el.style.height = (Math.random() * 6 + 4) + 'px';
-            el.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
-            el.style.animationDelay = (Math.random() * 0.5) + 's';
-            container.appendChild(el);
-            setTimeout(() => el.remove(), 4000);
-        }
-    }
-
-    // ========== 滚动到顶部 ==========
-    function scrollToTop() {
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    }
-
-    // ========== 定时刷新 ==========
-    setInterval(() => {
-        renderGreeting();
-    }, 60000);
-
-    // ========== PWA ==========
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
-    }
-
-    // ========== 初始化 ==========
+    currentUserInfo = usersDB[currentUser];
+    if (!currentUserInfo.data) currentUserInfo.data = getDefaultUserData();
+    data = currentUserInfo.data;
+    document.getElementById('authOverlay').classList.add('hidden');
+    document.getElementById('currentUserAvatar').textContent = currentUserInfo.avatar || '🧑‍🎓';
+    document.getElementById('currentUserName').textContent = currentUser;
+    renderUserDropdown();
     renderAll();
-    // 初次解锁
-    privacyUnlocked = true;
+    checkAchievements();
+    return true;
+}
+
+function saveData() { 
+    if (!currentUser || !usersDB[currentUser]) return;
+    usersDB[currentUser].data = data; saveUsersDB(); 
+}
+
+// ============================================================
+//  用户切换 & 登录注册
+// ============================================================
+function toggleUserDropdown() { document.getElementById('userDropdown').classList.toggle('show'); }
+function renderUserDropdown() {
+    document.getElementById('userList').innerHTML = Object.keys(usersDB).map(name => {
+        const u = usersDB[name]; const isActive = name === currentUser;
+        return `<div class="u-item" onclick="switchUser('${name}')"><span>${u.avatar||'🧑‍🎓'}</span><span>${name}</span>${isActive?'<span class=\"check\">✓</span>':''}</div>`;
+    }).join('');
+}
+function switchUser(name) {
+    if (name === currentUser) { document.getElementById('userDropdown').classList.remove('show'); return; }
+    if (usersDB[name]) { saveCurrentUser(name); document.getElementById('userDropdown').classList.remove('show'); initUserSession(); }
+}
+function doLogout() {
+    localStorage.removeItem(CURRENT_USER_KEY);
+    currentUser = null; data = null;
+    document.getElementById('authOverlay').classList.remove('hidden');
+    document.getElementById('userDropdown').classList.remove('show');
+}
+
+function switchAuthTab(tab) {
+    document.getElementById('loginTab').classList.toggle('active',tab==='login');
+    document.getElementById('registerTab').classList.toggle('active',tab==='register');
+    document.getElementById('authLoginForm').style.display=tab==='login'?'block':'none';
+    document.getElementById('authRegisterForm').style.display=tab==='register'?'block':'none';
+    document.getElementById('loginError').style.display='none';
+    document.getElementById('regError').style.display='none';
+}
+function selectRegAvatar(el, av) { document.querySelectorAll('#authRegisterForm .md-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); selectedRegAvatar=av; }
+
+function doLogin() {
+    const user=document.getElementById('loginUser').value.trim();
+    const pass=document.getElementById('loginPass').value.trim();
+    const err=document.getElementById('loginError');
+    if(!user||!pass){err.textContent='请输入用户名和密码';err.style.display='block';return;}
+    if(!usersDB[user]){err.textContent='用户不存在，请先注册';err.style.display='block';return;}
+    if(usersDB[user].password!==pass){err.textContent='密码错误';err.style.display='block';return;}
+    err.style.display='none';
+    saveCurrentUser(user); initUserSession();
+    showToast('👋 欢迎回来，'+user+'！');
+    document.getElementById('loginUser').value=''; document.getElementById('loginPass').value='';
+}
+function doRegister() {
+    const user=document.getElementById('regUser').value.trim();
+    const pass=document.getElementById('regPass').value.trim();
+    const school=document.getElementById('regSchool').value.trim();
+    const err=document.getElementById('regError');
+    if(!user){err.textContent='请输入用户名';err.style.display='block';return;}
+    if(pass.length<4){err.textContent='密码至少4位';err.style.display='block';return;}
+    if(usersDB[user]){err.textContent='用户名已存在';err.style.display='block';return;}
+    err.style.display='none';
+    usersDB[user]={password:pass,avatar:selectedRegAvatar,school:school,bio:'考研人，正在努力中！',joined:new Date().toISOString(),data:getDefaultUserData()};
+    usersDB[user].data.targetSchool=school;
+    saveUsersDB(); saveCurrentUser(user); initUserSession();
+    showToast('🎉 注册成功！欢迎 '+user+'！',true);
+    document.getElementById('regUser').value=''; document.getElementById('regPass').value=''; document.getElementById('regSchool').value='';
+}
+
+// ============================================================
+//  工具函数
+// ============================================================
+function getDateStr(d){const date=d||new Date();return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');}
+function isChecked(dateStr){return data.records.includes(dateStr);}
+function getDaysInMonth(y,m){return new Date(y,m+1,0).getDate();}
+function getFirstDay(y,m){return new Date(y,m,1).getDay();}
+function calcStreak(){
+    if(!data.records.length)return 0;
+    const sorted=[...data.records].sort().reverse();
+    let streak=0;
+    const today=new Date();
+    const diffDays=Math.floor((today-new Date(sorted[0]))/(1000*60*60*24));
+    if(diffDays>1)return 0;
+    for(let i=0;i<sorted.length;i++){
+        const curr=new Date(sorted[i]);
+        if(i===0){streak=1;continue;}
+        const diff=Math.floor((new Date(sorted[i-1])-curr)/(1000*60*60*24));
+        if(diff===1)streak++;else break;
+    }
+    return streak;
+}
+function calcBestStreak(){
+    if(!data.records.length)return 0;
+    const sorted=[...data.records].sort();
+    let best=1,current=1;
+    for(let i=1;i<sorted.length;i++){
+        const diff=Math.floor((new Date(sorted[i])-new Date(sorted[i-1]))/(1000*60*60*24));
+        if(diff===1){current++;best=Math.max(best,current);}else current=1;
+    }
+    return best;
+}
+function getTotalHours(){return data.timerLogs.reduce((s,l)=>s+l.seconds,0)/3600;}
+function getMonthDays(y,m){const p=y+'-'+String(m+1).padStart(2,'0');return data.records.filter(r=>r.startsWith(p)).length;}
+function getMonthHours(y,m){const p=y+'-'+String(m+1).padStart(2,'0');return data.timerLogs.filter(l=>l.date.startsWith(p)).reduce((s,l)=>s+l.seconds,0)/3600;}
+function calcExamDays(){const exam=new Date(2025,11,20);const today=new Date();today.setHours(0,0,0,0);return Math.max(0,Math.ceil((exam-today)/(1000*60*60*24)));}
+
+// ============================================================
+//  渲染
+// ============================================================
+function renderAll(){
+    renderGreeting();renderCountdown();renderStats();renderButton();renderWeekDays();
+    renderCalendar();renderRecords();renderSubjectBreakdown();renderBadges();
+    renderTodos();renderProfile();renderLeaderboard();renderFeeds();renderRoom();
+    if(document.getElementById('pageRank').classList.contains('active'))renderLeaderboard();
+}
+
+// ============================================================
+//  页面切换
+// ============================================================
+function switchPage(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const navMap = { home: 0, room: 1, rank: 2, profile: 3 };
+    document.querySelectorAll('.nav-item')[navMap[page]].classList.add('active');
+    if (page === 'rank') renderLeaderboard();
+    if (page === 'room') { renderFeeds(); renderRoom(); }
+    if (page === 'profile') renderProfile();
+    renderCalendar();
+}
+function openModal(id) { document.getElementById(id).classList.add('show'); if(id==='statsModal')renderStatsModal(); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// ============================================================
+//  渲染函数
+// ============================================================
+function renderGreeting() {
+    const h = new Date().getHours();
+    const greet = h < 6 ? '🌙 夜深了' : h < 9 ? '🌅 早上好' : h < 12 ? '☀️ 上午好' : h < 14 ? '🌤 中午好' : h < 18 ? '🌇 下午好' : '🌆 晚上好';
+    document.getElementById('greetingText').textContent = greet + '，' + currentUser + ' ☕';
+    const mottos = ['每天进步一点点', '坚持就是胜利', '考研人，考研魂！', '今天也是努力的一天', '加油！距离上岸更近了', '星光不问赶路人', '研途有你，一路同行'];
+    document.getElementById('mottoText').textContent = mottos[Math.floor(Math.random() * mottos.length)];
+}
+
+function renderCountdown() {
+    document.getElementById('daysLeft').textContent = calcExamDays();
+}
+
+function renderStats() {
+    document.getElementById('statTotal').textContent = data.records.length;
+    document.getElementById('statStreak').textContent = calcStreak();
+    document.getElementById('statHours').textContent = getTotalHours().toFixed(1);
+    const now = new Date();
+    document.getElementById('statMonth').textContent = getMonthDays(now.getFullYear(), now.getMonth());
+}
+
+function renderButton() {
+    const btn = document.getElementById('checkinBtn');
+    const today = getDateStr();
+    if (data.records.includes(today)) {
+        btn.textContent = '✅ 今日已打卡 · ' + (data.notes[today] ? data.notes[today].slice(0, 20) : '继续加油');
+        btn.classList.add('done');
+    } else {
+        btn.textContent = '📌 今日打卡';
+        btn.classList.remove('done');
+    }
+}
+
+function renderWeekDays() {
+    const now = new Date();
+    const day = now.getDay();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - day);
+    const weekDays = document.getElementById('weekDays');
+    const names = ['日', '一', '二', '三', '四', '五', '六'];
+    weekDays.innerHTML = '';
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStart);
+        d.setDate(weekStart.getDate() + i);
+        const ds = getDateStr(d);
+        const isToday = ds === getDateStr();
+        const checked = data.records.includes(ds);
+        const dayHours = data.timerLogs.filter(l => l.date === ds).reduce((s, l) => s + l.seconds, 0) / 3600;
+        const el = document.createElement('div');
+        el.className = 'week-day';
+        el.innerHTML = `<div class="d">${names[i]}</div><div class="circle ${isToday?'today':''} ${checked?'checked':''}">${d.getDate()}</div><div class="hours">${dayHours>0?dayHours.toFixed(1)+'h':''}</div>`;
+        weekDays.appendChild(el);
+    }
+}
+
+function renderCalendar() {
+    const now = new Date();
+    if (currentYear===undefined||currentMonth===undefined){currentYear=now.getFullYear();currentMonth=now.getMonth();}
+    const ms=['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+    document.getElementById('calMonth').textContent=currentYear+'年 '+ms[currentMonth];
+    const days=getDaysInMonth(currentYear,currentMonth);const firstDay=getFirstDay(currentYear,currentMonth);
+    const grid=document.getElementById('daysGrid');grid.innerHTML='';
+    for(let i=0;i<firstDay;i++){const el=document.createElement('div');el.className='day-cell other';grid.appendChild(el);}
+    for(let d=1;d<=days;d++){
+        const ds=currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+        const isToday=ds===getDateStr();const checked=data.records.includes(ds);
+        const hasNote=data.notes&&data.notes[ds];
+        const el=document.createElement('div');el.className='day-cell';
+        if(isToday)el.classList.add('today');if(checked)el.classList.add('checked');
+        el.textContent=d;if(hasNote){const dot=document.createElement('div');dot.className='dot';el.appendChild(dot);}
+        grid.appendChild(el);
+    }
+}
+function changeMonth(delta){currentMonth+=delta;if(currentMonth>11){currentMonth=0;currentYear++;}if(currentMonth<0){currentMonth=11;currentYear--;}renderCalendar();}
+
+function renderRecords() {
+    const container=document.getElementById('recordsList');
+    if(!data.records.length){container.innerHTML='<div class="empty-state"><div class="icon">📝</div><div class="msg">还没有打卡记录<br>今天开始你的第一次打卡吧！</div></div>';return;}
+    const sorted=[...data.records].sort().reverse().slice(0,30);
+    container.innerHTML=sorted.map(ds=>{
+        const note=data.notes?data.notes[ds]:'';const mood=data.moods?data.moods[ds]:'';
+        const h=data.timerLogs.filter(l=>l.date===ds).reduce((s,l)=>s+l.seconds,0)/3600;
+        return `<div class="record-item"><div class="record-icon">${mood||'📌'}</div><div class="record-info"><div class="date">${ds}</div><div class="detail">学习 ${h.toFixed(1)} 小时</div>${note?'<div class="note">📖 '+note+'</div>':''}</div><div class="record-badge">✅ 已打卡</div></div>`;
+    }).join('');
+}
+
+function renderSubjectBreakdown() {
+    const c=document.getElementById('subjectBreakdown');const subs=['政治','英语','数学','专业课'];
+    const t={};subs.forEach(s=>t[s]=0);data.timerLogs.forEach(l=>{const s=l.subject||'政治';if(t[s]!==undefined)t[s]+=l.seconds;});
+    const max=Math.max(...Object.values(t),1);const colors=['#6c63ff','#ff6584','#ffc857','#2ecc71'];
+    c.innerHTML=subs.map((s,i)=>`<div class="subject-bar-item"><div class="sbj">${s}</div><div class="track"><div class="fill" style="width:${(t[s]/max*100).toFixed(0)}%;background:${colors[i]};"></div></div><div class="hours">${(t[s]/3600).toFixed(1)}h</div></div>`).join('');
+}
+
+// ============================================================
+//  打卡
+// ============================================================
+function doCheckin(){
+    const today=getDateStr();
+    if(data.records.includes(today)){showToast('✅ 今天已经打过卡啦！');return;}
+    data.records.push(today);
+    const note=document.getElementById('studyNote').value.trim();
+    if(note){if(!data.notes)data.notes={};data.notes[today]=note;}
+    if(selectedMood){if(!data.moods)data.moods={};data.moods[today]=selectedMood;}
+    const streak=calcStreak();lastCheckinAchievements=[];
+    if(streak===7)lastCheckinAchievements.push({icon:'🔥',title:'连续7天！',desc:'坚持了一周，好习惯正在养成！'});
+    if(streak===30)lastCheckinAchievements.push({icon:'💪',title:'连续30天！',desc:'一个月不间断，太棒了！'});
+    if(streak===100)lastCheckinAchievements.push({icon:'🏆',title:'连续100天！',desc:'百天打卡，学霸就是你！'});
+    if(data.records.length===1)lastCheckinAchievements.push({icon:'🎯',title:'第一次打卡',desc:'迈出了第一步！'});
+    if(data.records.length===100)lastCheckinAchievements.push({icon:'💯',title:'打卡100次！',desc:'坚持打卡100次！'});
+    saveData();renderAll();document.getElementById('studyNote').value='';selectedMood='';
+    document.querySelectorAll('.mood-picker .md-btn').forEach(b=>b.classList.remove('active'));
+    showToast('🎉 打卡成功！');
+    if(lastCheckinAchievements.length>0)setTimeout(()=>showAchievement(lastCheckinAchievements[0]),600);
+    if(streak>0&&streak%7===0)launchConfetti();
+}
+
+// ============================================================
+//  番茄计时器
+// ============================================================
+function setPomoMode(mode){
+    if(timerRunning){showToast('⏸ 请先停止计时再切换模式');return;}
+    timerMode=mode;document.querySelectorAll('.pm-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelector('.pm-btn[data-mode="'+mode+'"]').classList.add('active');resetTimer();
+}
+function toggleTimer(){
+    const btn=document.getElementById('timerStartBtn');
+    if(timerRunning){
+        clearInterval(timerInterval);timerRunning=false;btn.textContent='▶ 继续';btn.className='timer-btn start';
+        document.getElementById('timerDisplay').classList.remove('active');
+    }else{
+        timerRunning=true;btn.textContent='⏸ 暂停';btn.className='timer-btn stop';
+        document.getElementById('timerDisplay').classList.add('active');
+        if(timerSeconds===0)timerSeconds=POMO_TIMES[timerMode];
+        timerInterval=setInterval(()=>{
+            timerSeconds--;updateTimerDisplay();
+            if(timerSeconds<=0){
+                clearInterval(timerInterval);timerRunning=false;btn.textContent='▶ 开始';btn.className='timer-btn start';
+                document.getElementById('timerDisplay').classList.remove('active');
+                if(timerMode==='pomo'){
+                    logTimer(currentSubject);showToast('🍅 专注完成！休息一下吧！');
+                    data.pomoCount=(data.pomoCount||0)+1;saveData();
+                    if(data.pomoCount===10)showAchievement({icon:'🍅',title:'番茄达人',desc:'累计完成10个番茄钟！'});
+                    if(data.pomoCount===50)showAchievement({icon:'🏅',title:'番茄大师',desc:'累计完成50个番茄钟！'});
+                    launchConfetti();
+                }else showToast('☕ 休息结束，继续加油！');
+            }
+        },1000);
+    }
+}
+function resetTimer(){clearInterval(timerInterval);timerRunning=false;timerSeconds=POMO_TIMES[timerMode];document.getElementById('timerStartBtn').textContent='▶ 开始';document.getElementById('timerStartBtn').className='timer-btn start';document.getElementById('timerDisplay').classList.remove('active');updateTimerDisplay();}
+function updateTimerDisplay(){const m=Math.floor(timerSeconds/60);const s=timerSeconds%60;document.getElementById('timerDisplay').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
+document.getElementById('subjectTags').addEventListener('click',function(e){if(e.target.classList.contains('subject-tag')){document.querySelectorAll('.subject-tag').forEach(t=>t.classList.remove('active'));e.target.classList.add('active');currentSubject=e.target.dataset.subject;}});
+function logTimer(subject){if(!data.timerLogs)data.timerLogs=[];const today=getDateStr();data.timerLogs.push({date:today,seconds:POMO_TIMES.pomo,subject:subject,ts:Date.now()});saveData();renderAll();}
+function selectMood(el){document.querySelectorAll('.mood-picker .md-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');selectedMood=el.dataset.mood;}
+
+// ============================================================
+//  Toast & 彩纸 & 成就
+// ============================================================
+function showToast(msg,isGood){
+    const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className='toast';t.textContent=msg;
+    if(isGood)t.style.borderColor='var(--green)';c.appendChild(t);
+    requestAnimationFrame(()=>t.classList.add('show'));
+    setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),400);},2000);
+}
+function launchConfetti(){
+    const c=document.getElementById('confettiContainer');const colors=['#ff6584','#6c63ff','#ffc857','#2ecc71','#3498db','#e74c3c'];
+    for(let i=0;i<40;i++){const el=document.createElement('div');el.className='confetti';el.style.left=Math.random()*100+'%';el.style.width=(Math.random()*8+4)+'px';el.style.height=(Math.random()*8+4)+'px';el.style.background=colors[Math.floor(Math.random()*colors.length)];el.style.animationDuration=(Math.random()*2+1.5)+'s';el.style.animationDelay=Math.random()*1+'s';c.appendChild(el);}
+    setTimeout(()=>c.innerHTML='',4000);
+}
+function showAchievement(ach){document.getElementById('achieveIcon').textContent=ach.icon;document.getElementById('achieveTitle').textContent=ach.title;document.getElementById('achieveDesc').textContent=ach.desc;document.getElementById('achievePopup').classList.add('show');setTimeout(()=>document.getElementById('achievePopup').classList.remove('show'),3000);}
+function checkAchievements(){
+    if(!data)return;if(!data.badges)data.badges=[];
+    const allBadges=[
+        {id:'first',icon:'🎯',name:'第一步',check:()=>data.records.length>=1},
+        {id:'week',icon:'🔥',name:'连续7天',check:()=>calcStreak()>=7},
+        {id:'month',icon:'💪',name:'连续30天',check:()=>calcStreak()>=30},
+        {id:'hundred',icon:'💯',name:'百次打卡',check:()=>data.records.length>=100},
+        {id:'pomo10',icon:'🍅',name:'番茄达人',check:()=>(data.pomoCount||0)>=10},
+        {id:'pomo50',icon:'🏅',name:'番茄大师',check:()=>(data.pomoCount||0)>=50},
+        {id:'hours10',icon:'⏱',name:'学满10h',check:()=>getTotalHours()>=10},
+        {id:'hours100',icon:'⌛',name:'学满100h',check:()=>getTotalHours()>=100},
+        {id:'goal',icon:'⭐',name:'达成目标',check:()=>data.dailyGoal>=8},
+        {id:'school',icon:'🎓',name:'目标明确',check:()=>data.targetSchool&&data.targetSchool.length>0},
+    ];
+    allBadges.forEach(b=>{if(b.check()&&!data.badges.includes(b.id))data.badges.push(b.id);});
+}
+function renderBadges(){
+    const allBadges=[
+        {id:'first',icon:'🎯',name:'第一步'},{id:'week',icon:'🔥',name:'连续7天'},{id:'month',icon:'💪',name:'连续30天'},
+        {id:'hundred',icon:'💯',name:'百次打卡'},{id:'pomo10',icon:'🍅',name:'番茄达人'},{id:'pomo50',icon:'🏅',name:'番茄大师'},
+        {id:'hours10',icon:'⏱',name:'学满10h'},{id:'hours100',icon:'⌛',name:'学满100h'},{id:'goal',icon:'⭐',name:'达成目标'},
+        {id:'school',icon:'🎓',name:'目标明确'},{id:'streak',icon:'🏆',name:'最强连胜'},{id:'social',icon:'👥',name:'研友互动'},
+    ];
+    if(!data.badges)data.badges=[];
+    document.getElementById('badgeGrid').innerHTML=allBadges.map(b=>`<div class="badge-item ${data.badges.includes(b.id)?'unlocked':'locked'}"><div class="icon">${b.icon}</div><div class="name">${b.name}</div></div>`).join('');
+}
+
+// ============================================================
+//  排行榜（全用户）
+// ============================================================
+function switchLB(mode){currentLB=mode;document.querySelectorAll('.lb-tab').forEach(t=>t.classList.remove('active'));document.querySelector('.lb-tab[data-lb="'+mode+'"]').classList.add('active');renderLeaderboard();}
+function renderLeaderboard(){
+    const c=document.getElementById('lbList');const users=Object.keys(usersDB);const now=new Date();
+    const isWeek=(ds)=>{const d=new Date(ds);return Math.floor((now-d)/(1000*60*60*24))<7;};
+    const isMonth=(ds)=>{const d=new Date(ds);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();};
+    const ranked=users.map(name=>{const u=usersDB[name];const d=u.data||getDefaultUserData();let count=0;if(currentLB==='weekly')count=(d.records||[]).filter(r=>isWeek(r)).length;else if(currentLB==='monthly')count=(d.records||[]).filter(r=>isMonth(r)).length;else count=(d.records||[]).length;return{name,avatar:u.avatar||'🧑‍🎓',count,mood:d.moods?d.moods[getDateStr()]:''};}).filter(r=>r.count>0).sort((a,b)=>b.count-a.count);
+    if(!ranked.length){c.innerHTML='<div class="empty-state" style="padding:20px;"><div class="msg">暂无排行数据<br>快去打卡吧！</div></div>';return;}
+    const maxCount=ranked[0].count||1;
+    c.innerHTML=ranked.map((r,i)=>{const rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';const pct=(r.count/maxCount*100).toFixed(0);return `<div class="lb-item"><div class="lb-rank ${rc}">${i<3?['🥇','🥈','🥉'][i]:'#'+(i+1)}</div><span class="lb-mood">${r.avatar}</span><span class="lb-name">${r.name}</span><div class="lb-bar"><div class="lb-bar-fill" style="width:${pct}%;"></div></div><span class="lb-count">${r.count}天</span></div>`;}).join('');
+}
+
+// ============================================================
+//  自习室
+// ============================================================
+let inStudyRoom=false;
+function renderRoom(){
+    const allUsers=Object.keys(usersDB);const today=getDateStr();
+    const online=allUsers.filter(name=>{const u=usersDB[name];if(!u||!u.data)return false;return u.data.records&&u.data.records.includes(today);});
+    document.getElementById('onlineCount').textContent=online.length;
+    const c=document.getElementById('roomUserList');
+    if(!online.length){c.innerHTML='<div class="empty-state" style="padding:20px;"><div class="msg">暂无在线研友</div></div>';return;}
+    c.innerHTML=online.map(name=>{const u=usersDB[name];const h=(u.data.timerLogs||[]).filter(l=>l.date===today).reduce((s,l)=>s+l.seconds,0)/3600;return `<div class="room-user"><div class="ru-avatar">${u.avatar||'🧑‍🎓'}</div><div class="ru-name">${name}</div><div class="ru-status"><span class="dot"></span>学习中</div><div class="ru-hours">今日 ${h.toFixed(1)}h</div></div>`;}).join('');
+}
+function joinStudyRoom(){
+    if(!inStudyRoom){inStudyRoom=true;document.getElementById('roomJoinBtn').textContent='🚪 退出自习室';document.getElementById('roomJoinBtn').style.background='var(--red)';showToast('📚 已进入自习室！');renderRoom();}
+    else{inStudyRoom=false;document.getElementById('roomJoinBtn').textContent='🚪 进入自习室学习';document.getElementById('roomJoinBtn').style.background='';showToast('👋 已退出自习室');}
+}
+
+// ============================================================
+//  动态
+// ============================================================
+function renderFeeds(){
+    const c=document.getElementById('feedList');const feeds=[];
+    Object.keys(usersDB).forEach(name=>{const u=usersDB[name];if(!u||!u.data)return;const d=u.data;(d.records||[]).forEach(r=>{const note=d.notes?d.notes[r]:'';const mood=d.moods?d.moods[r]:'';const h=(d.timerLogs||[]).filter(l=>l.date===r).reduce((s,l)=>s+l.seconds,0)/3600;feeds.push({name,avatar:u.avatar||'🧑‍🎓',date:r,note,mood,hours:h});});});
+    feeds.sort((a,b)=>new Date(b.date)-new Date(a.date));const latest=feeds.slice(0,20);
+    if(!latest.length){c.innerHTML='<div class="empty-state" style="padding:20px;"><div class="msg">暂无研友动态<br>开始打卡后动态会自动出现</div></div>';return;}
+    c.innerHTML=latest.map(f=>`<div class="feed-item"><div class="fi-avatar">${f.avatar}</div><div class="fi-content"><div class="fi-name">${f.name} <span class="tag">打卡了</span></div><div class="fi-text">${f.mood} 学习了 ${f.hours.toFixed(1)} 小时${f.note?' · 「'+f.note+'」':''}</div><div class="fi-time">${f.date}</div></div></div>`).join('');
+}
+
+// ============================================================
+//  个人主页
+// ============================================================
+function renderProfile(){
+    if(!currentUserInfo)return;
+    document.getElementById('profileAvatar').textContent=currentUserInfo.avatar||'🧑‍🎓';
+    document.getElementById('profileName').textContent=currentUser;
+    document.getElementById('profileBio').textContent=currentUserInfo.bio||'考研人，正在努力中！';
+    document.getElementById('profileSchool').textContent='🎯 '+(data.targetSchool||'目标院校：未设置');
+    document.getElementById('profileDays').textContent=data.records.length;
+    document.getElementById('profileHours').textContent=getTotalHours().toFixed(1);
+    document.getElementById('profileStreak').textContent=calcBestStreak();
+}
+
+// ============================================================
+//  待办事项
+// ============================================================
+function renderTodos(){
+    const c=document.getElementById('todoList');if(!data.todos||!data.todos.length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">📋 今天还没有任务，添加一个吧</div>';return;}
+    c.innerHTML=data.todos.map((t,i)=>{const done=data.todoDone&&data.todoDone[t];return `<div class="todo-item"><div class="todo-check ${done?'done':''}" onclick="toggleTodo(${i})">${done?'✓':''}</div><div class="todo-text ${done?'done':''}">${t}</div><div class="todo-del" onclick="delTodo(${i})">✕</div></div>`;}).join('');
+}
+function addTodo(){const input=document.getElementById('todoInput');const t=input.value.trim();if(!t)return;if(!data.todos)data.todos=[];data.todos.push(t);if(!data.todoDone)data.todoDone={};saveData();renderTodos();input.value='';}
+function toggleTodo(i){const t=data.todos[i];if(!data.todoDone)data.todoDone={};data.todoDone[t]=!data.todoDone[t];saveData();renderTodos();if(data.todoDone[t])showToast('✅ '+t+' 完成！');}
+function delTodo(i){const t=data.todos[i];data.todos.splice(i,1);if(data.todoDone)delete data.todoDone[t];saveData();renderTodos();}
+
+// ============================================================
+//  统计弹窗
+// ============================================================
+function renderStatsModal(){
+    document.querySelector('.total-checkins').textContent=data.records.length;
+    document.querySelector('.total-hours').textContent=getTotalHours().toFixed(1);
+    document.querySelector('.best-streak').textContent=calcBestStreak();
+    const avg=data.records.length>0?(getTotalHours()/data.records.length):0;
+    document.querySelector('.avg-hours').textContent=avg.toFixed(1);
+    const now=new Date();const day=now.getDay();const ws=new Date(now);ws.setDate(now.getDate()-day);
+    const chart=document.getElementById('weekChart');const names=['日','一','二','三','四','五','六'];let mh=0;const vals=[];
+    for(let i=0;i<7;i++){const d=new Date(ws);d.setDate(ws.getDate()+i);const ds=getDateStr(d);const h=data.timerLogs.filter(l=>l.date===ds).reduce((s,l)=>s+l.seconds,0)/3600;vals.push(h);mh=Math.max(mh,h);}
+    if(mh===0)mh=1;
+    chart.innerHTML=vals.map((h,i)=>{const pct=(h/mh*100).toFixed(0);return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:4px;"><div class="mini-bar ${h>0?'filled':''} ${i===day?'today-bar':''}" style="height:${pct}%;"></div><span style="font-size:8px;color:var(--text3);">${names[i]}</span><span style="font-size:7px;color:var(--text3);font-weight:600;">${h.toFixed(1)}</span></div>`;}).join('');
+}
+
+// ============================================================
+//  设置
+// ============================================================
+function toggleNotification(){const t=document.getElementById('notificationToggle');t.classList.toggle('on');data.notificationEnabled=t.classList.contains('on');saveData();}
+function togglePrivacy(){const t=document.getElementById('privacyToggle');t.classList.toggle('on');data.privacyEnabled=t.classList.contains('on');if(data.privacyEnabled&&!data.passcode){showToast('🔒 请设置4位密码');openModal('passcodeModal');}saveData();}
+function saveTargetSchool(){const s=document.getElementById('targetSchoolInput').value.trim();if(s){data.targetSchool=s;saveData();showToast('🎯 目标院校已设置！');}}
+function saveDailyGoal(){const g=parseInt(document.getElementById('dailyGoalInput').value);if(g>0&&g<=24){data.dailyGoal=g;saveData();document.getElementById('dailyGoalDisplay').textContent='当前目标：'+g+' 小时/天';showToast('✅ 学习目标已更新');}}
+
+// ============================================================
+//  密码锁
+// ============================================================
+function inputPasscode(v){
+    if(v==='clear'){passcodeInput='';document.querySelectorAll('.passcode-dot').forEach(d=>d.classList.remove('filled'));return;}
+    if(v==='confirm'){
+        if(passcodeInput.length===4){
+            if(!data.passcode){data.passcode=passcodeInput;saveData();showToast('🔒 密码设置成功');closeModal('passcodeModal');}
+            else if(passcodeInput===data.passcode){privacyUnlocked=true;closeModal('passcodeModal');showToast('🔓 已解锁');}
+            else{showToast('❌ 密码错误');passcodeInput='';document.querySelectorAll('.passcode-dot').forEach(d=>d.classList.remove('filled'));}
+        }return;
+    }
+    if(passcodeInput.length<4){passcodeInput+=v;document.querySelectorAll('.passcode-dot')[passcodeInput.length-1].classList.add('filled');}
+}
+
+// ============================================================
+//  数据导入导出
+// ============================================================
+function exportData(){
+    const b=new Blob([JSON.stringify({user:currentUser,data:data,exportTime:new Date().toISOString()},null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=currentUser+'_数据备份_'+getDateStr()+'.json';a.click();showToast('📤 数据已导出');
+}
+function importData(){
+    const input=document.createElement('input');input.type='file';input.accept='.json';
+    input.onchange=function(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){try{const json=JSON.parse(ev.target.result);if(!json.data){showToast('❌ 文件格式不正确');return;}data.records=json.data.records||[];data.notes=json.data.notes||{};data.moods=json.data.moods||{};data.timerLogs=json.data.timerLogs||[];data.todos=json.data.todos||[];data.todoDone=json.data.todoDone||{};saveData();renderAll();showToast('📥 数据导入成功！');}catch(e){showToast('❌ 文件解析失败');}};reader.readAsText(file);};
+    input.click();
+}
+function confirmReset(){if(confirm('⚠️ 确定要清除所有数据吗？此操作不可恢复！')){localStorage.removeItem(USERS_KEY);localStorage.removeItem(CURRENT_USER_KEY);location.reload();}}
+
+// ============================================================
+//  时钟 & 自动刷新 & 初始化
+// ============================================================
+function updateClock(){const n=new Date();document.getElementById('statusTime').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
+setInterval(()=>{if(document.getElementById('pageRoom').classList.contains('active')){renderRoom();renderFeeds();}},10000);
+(function init(){updateClock();setInterval(updateClock,30000);if(!initUserSession()){renderUserDropdown();}document.addEventListener('click',function(e){const dd=document.getElementById('userDropdown');const sw=document.getElementById('userSwitcher');if(dd.classList.contains('show')&&!dd.contains(e.target)&&!sw.contains(e.target))dd.classList.remove('show');});})();
+
+// Delete stray function that conflicts with the rest of code
+if(typeof setPomoMode !== 'function'){}
+
 </script>
 </body>
 </html>
