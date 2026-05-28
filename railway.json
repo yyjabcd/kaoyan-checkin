@@ -1,0 +1,10 @@
+{
+  "build": {
+    "builder": "NIXPACKS",
+    "nixpacksConfigPath": "server"
+  },
+  "deploy": {
+    "startCommand": "cd server && node server.js",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}

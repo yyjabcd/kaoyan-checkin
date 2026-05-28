@@ -642,15 +642,13 @@
 <div class="toast-container" id="toastContainer"></div>
 <div class="confetti-container" id="confettiContainer"></div>
 
-<!-- ===== 用户切换 ===== -->
+<!-- ===== 用户状态 ===== -->
 <div class="user-switcher" id="userSwitcher" onclick="toggleUserDropdown()">
     <span class="avatar" id="currentUserAvatar">🧑‍🎓</span>
-    <span class="name" id="currentUserName">用户</span>
+    <span class="name" id="currentUserName">未登录</span>
     <span class="dropdown">▼</span>
 </div>
 <div class="user-dropdown" id="userDropdown">
-    <div id="userList"></div>
-    <div class="divider"></div>
     <div class="u-item logout" onclick="doLogout()">🚪 退出登录</div>
 </div>
 
@@ -677,7 +675,7 @@
     <div class="countdown-card">
         <div class="top-row">
             <span class="label">🎯 考研倒计时</span>
-            <span class="exam-date">2025.12.20</span>
+            <span class="exam-date" id="examDateLabel">2025.12.20</span>
         </div>
         <div class="days-row">
             <span class="days-num" id="daysLeft">0</span>
@@ -694,6 +692,18 @@
 
     <div class="checkin-section">
         <button class="checkin-btn" id="checkinBtn" onclick="doCheckin()">📌 今日打卡</button>
+    </div>
+
+    <div class="section-title"><h3>📋 今日计划</h3></div>
+    <div class="todo-section">
+        <div id="dailyPlanList"></div>
+        <div class="todo-add-row">
+            <input id="planGoalInput" placeholder="添加今日学习目标..." onkeydown="if(event.key==='Enter')addPlanGoal()">
+            <button onclick="addPlanGoal()">添加</button>
+        </div>
+        <div style="margin-top:8px;">
+            <textarea id="planSummary" class="auth-input" placeholder="晚间复盘：今天学到了什么？哪里需要改进？" style="height:60px;resize:none;" onchange="savePlanSummary()"></textarea>
+        </div>
     </div>
 
     <div class="section-title"><h3>⏱ 番茄专注</h3></div>
@@ -809,26 +819,32 @@
             <button onclick="addTodo()">添加</button>
         </div>
     </div>
+    <div class="section-title"><h3>📝 成绩追踪</h3><span class="more" onclick="showAddScore()">+ 添加</span></div>
+    <div class="todo-section">
+        <div id="scoreList"></div>
+        <div id="addScoreForm" style="display:none;background:var(--card);border-radius:var(--radius-sm);padding:14px;margin-top:8px;">
+            <select id="scoreSubject" class="auth-input" style="margin-bottom:6px;"><option>政治</option><option>英语</option><option>数学</option><option>专业课</option></select>
+            <input id="scoreExamName" class="auth-input" placeholder="试卷名称（如：肖秀荣模拟卷一）" style="margin-bottom:6px;">
+            <div style="display:flex;gap:8px;margin-bottom:6px;">
+                <input id="scoreValue" type="number" class="auth-input" placeholder="得分" style="flex:1;">
+                <input id="scoreTotal" type="number" class="auth-input" placeholder="满分" value="100" style="flex:1;">
+            </div>
+            <input id="scoreDate" type="date" class="auth-input" style="margin-bottom:6px;">
+            <button class="auth-btn" onclick="addScore()" style="padding:10px;font-size:14px;">保存成绩</button>
+        </div>
+    </div>
+
     <div class="section-title"><h3>⚙️ 设置</h3></div>
     <div style="margin:0 16px;background:var(--card);border-radius:var(--radius);padding:16px;">
-        <div class="setting-item">
-            <div class="left"><div><div class="label">🔔 每日提醒</div></div></div>
-            <button class="toggle on" id="notificationToggle" onclick="toggleNotification()"></button>
-        </div>
-        <div class="setting-item">
-            <div class="left"><div><div class="label">🔒 隐私模式</div><div class="desc">开启后需密码进入</div></div></div>
-            <button class="toggle" id="privacyToggle" onclick="togglePrivacy()"></button>
-        </div>
+        <input class="auth-input" id="settingsTargetSchool" placeholder="目标院校" style="margin-bottom:6px;">
+        <input class="auth-input" id="settingsExamDate" type="date" placeholder="考试日期" style="margin-bottom:6px;">
+        <input class="auth-input" id="settingsSubjects" placeholder="考试科目（逗号分隔）" style="margin-bottom:8px;">
+        <button class="auth-btn" onclick="saveProfileSettings()" style="padding:10px;font-size:14px;">保存设置</button>
+        <div style="height:12px;"></div>
         <div class="setting-item" style="cursor:pointer;" onclick="exportData()">
-            <div class="left"><span>📤</span><div><div class="label">导出数据</div></div></div>
+            <div class="left"><span>📤</span><div><div class="label">导出数据备份</div></div></div>
         </div>
-        <div class="setting-item" style="cursor:pointer;" onclick="importData()">
-            <div class="left"><span>📥</span><div><div class="label">导入数据</div></div></div>
-        </div>
-        <div class="setting-item" style="cursor:pointer;" onclick="confirmReset()">
-            <div class="left"><span>🗑️</span><div><div class="label" style="color:var(--red);">清除所有数据</div><div class="desc">⚠️ 不可恢复</div></div></div>
-        </div>
-        <div style="text-align:center;margin-top:20px;font-size:12px;color:var(--text3);">研友同行 v3.0 · 多人学习平台</div>
+        <div style="text-align:center;margin-top:20px;font-size:12px;color:var(--text3);">研友同行 v3.1 · 云端多人学习平台</div>
     </div>
 </div>
 
@@ -854,6 +870,7 @@
         </div>
         <div style="font-size:13px;color:var(--text2);margin-bottom:8px;">本周专注时间</div>
         <div class="week-chart" id="weekChart"></div>
+        <div id="weekReportHTML"></div>
     </div>
 </div>
 
@@ -875,43 +892,13 @@
     </div>
 </div>
 
-<!-- ===== 密码弹窗 ===== -->
-<div class="modal-overlay" id="passcodeModal">
-    <div class="modal-content">
-        <div class="modal-handle"></div>
-        <div class="modal-title">🔒 输入密码</div>
-        <div class="passcode-dots" id="passcodeDots">
-            <div class="passcode-dot"></div>
-            <div class="passcode-dot"></div>
-            <div class="passcode-dot"></div>
-            <div class="passcode-dot"></div>
-        </div>
-        <div class="passcode-grid">
-            <button class="passcode-btn" onclick="inputPasscode('1')">1</button>
-            <button class="passcode-btn" onclick="inputPasscode('2')">2</button>
-            <button class="passcode-btn" onclick="inputPasscode('3')">3</button>
-            <button class="passcode-btn" onclick="inputPasscode('4')">4</button>
-            <button class="passcode-btn" onclick="inputPasscode('5')">5</button>
-            <button class="passcode-btn" onclick="inputPasscode('6')">6</button>
-            <button class="passcode-btn" onclick="inputPasscode('7')">7</button>
-            <button class="passcode-btn" onclick="inputPasscode('8')">8</button>
-            <button class="passcode-btn" onclick="inputPasscode('9')">9</button>
-            <button class="passcode-btn" onclick="inputPasscode('clear')" style="font-size:14px;">⌫</button>
-            <button class="passcode-btn" onclick="inputPasscode('0')">0</button>
-            <button class="passcode-btn" onclick="inputPasscode('confirm')" style="color:var(--primary);">✓</button>
-        </div>
-    </div>
-</div>
-
 <script>
 // ============================================================
-//  多用户数据层
+//  研友同行 v3.1 — 纯云端多人共享系统
+//  所有数据存储在服务器，多用户实时互通
 // ============================================================
-const USERS_KEY = 'yy_users_db';
-const CURRENT_USER_KEY = 'yy_current_user';
 
-let usersDB = loadUsersDB();
-let currentUser = loadCurrentUser();
+const CLOUD_API = ''; // 同源部署，使用相对路径
 let currentYear, currentMonth;
 let timerInterval = null;
 let timerSeconds = 0;
@@ -920,170 +907,201 @@ let timerMode = 'pomo';
 const POMO_TIMES = { pomo: 25*60, short: 5*60, long: 15*60 };
 let currentSubject = '政治';
 let selectedMood = '';
-let passcodeInput = '';
-let privacyUnlocked = false;
 let selectedRegAvatar = '🧑‍🎓';
 let currentLB = 'weekly';
-let lastCheckinAchievements = [];
 
-function loadUsersDB() {
-    try { const raw = localStorage.getItem(USERS_KEY); if (raw) return JSON.parse(raw); } catch(e) {}
-    return {};
-}
-function saveUsersDB() { localStorage.setItem(USERS_KEY, JSON.stringify(usersDB)); }
-function loadCurrentUser() {
-    const name = localStorage.getItem(CURRENT_USER_KEY);
-    if (name && usersDB[name]) return name;
-    return null;
-}
-function saveCurrentUser(name) { localStorage.setItem(CURRENT_USER_KEY, name); currentUser = name; }
-
-function getDefaultUserData() {
-    return {
-        records: [], notes: {}, moods: {}, timerLogs: [],
-        targetSchool: '', dailyGoal: 8, streakGoal: 30,
-        notificationEnabled: true, privacyEnabled: false, passcode: '',
-        created: new Date().toISOString(), todos: [], todoDone: {}, badges: [], pomoCount: 0, likedFeeds: []
-    };
-}
-
-let data = null;
+let CLOUD_TOKEN = localStorage.getItem('cloud_token') || '';
+let currentUser = '';
 let currentUserInfo = null;
 
-function initUserSession() {
-    if (!currentUser || !usersDB[currentUser]) {
-        document.getElementById('authOverlay').classList.remove('hidden');
-        return false;
+// 运行时数据缓存（从服务器同步）
+let data = { records: [], notes: {}, moods: {}, reflections: {}, timerLogs: [], todos: [], todoDone: [], scores: [], todayPlan: null };
+
+// ============================================================
+//  API 请求
+// ============================================================
+async function api(path, options = {}) {
+    const headers = { 'Content-Type': 'application/json', ...options.headers };
+    if (CLOUD_TOKEN) headers['Authorization'] = 'Bearer ' + CLOUD_TOKEN;
+    const res = await fetch(CLOUD_API + path, { ...options, headers });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error || '请求失败');
+    return body;
+}
+
+// ============================================================
+//  认证
+// ============================================================
+function switchAuthTab(tab) {
+    document.getElementById('loginTab').classList.toggle('active', tab==='login');
+    document.getElementById('registerTab').classList.toggle('active', tab==='register');
+    document.getElementById('authLoginForm').style.display = tab==='login' ? 'block' : 'none';
+    document.getElementById('authRegisterForm').style.display = tab==='register' ? 'block' : 'none';
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('regError').style.display = 'none';
+}
+
+function selectRegAvatar(el, av) {
+    document.querySelectorAll('#authRegisterForm .md-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    selectedRegAvatar = av;
+}
+
+async function doLogin() {
+    const user = document.getElementById('loginUser').value.trim();
+    const pass = document.getElementById('loginPass').value.trim();
+    const err = document.getElementById('loginError');
+    if (!user || !pass) { err.textContent = '请输入用户名和密码'; err.style.display = 'block'; return; }
+    err.style.display = 'none';
+    try {
+        const res = await api('/api/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        CLOUD_TOKEN = res.token;
+        localStorage.setItem('cloud_token', CLOUD_TOKEN);
+        currentUser = user;
+        currentUserInfo = res.user;
+        await loadUserData();
+        document.getElementById('authOverlay').classList.add('hidden');
+        updateUserUI();
+        renderAll();
+        showToast('👋 欢迎回来，' + user + '！');
+        document.getElementById('loginUser').value = '';
+        document.getElementById('loginPass').value = '';
+    } catch (e) {
+        err.textContent = e.message;
+        err.style.display = 'block';
     }
-    currentUserInfo = usersDB[currentUser];
-    if (!currentUserInfo.data) currentUserInfo.data = getDefaultUserData();
-    data = currentUserInfo.data;
-    document.getElementById('authOverlay').classList.add('hidden');
-    document.getElementById('currentUserAvatar').textContent = currentUserInfo.avatar || '🧑‍🎓';
-    document.getElementById('currentUserName').textContent = currentUser;
-    renderUserDropdown();
-    renderAll();
-    checkAchievements();
-    return true;
 }
 
-function saveData() { 
-    if (!currentUser || !usersDB[currentUser]) return;
-    usersDB[currentUser].data = data; saveUsersDB(); 
+async function doRegister() {
+    const user = document.getElementById('regUser').value.trim();
+    const pass = document.getElementById('regPass').value.trim();
+    const school = document.getElementById('regSchool').value.trim();
+    const err = document.getElementById('regError');
+    if (!user) { err.textContent = '请输入用户名'; err.style.display = 'block'; return; }
+    if (pass.length < 4) { err.textContent = '密码至少4位'; err.style.display = 'block'; return; }
+    err.style.display = 'none';
+    try {
+        const res = await api('/api/auth/register', {
+            method: 'POST',
+            body: JSON.stringify({ username: user, password: pass, avatar: selectedRegAvatar, school: school })
+        });
+        CLOUD_TOKEN = res.token;
+        localStorage.setItem('cloud_token', CLOUD_TOKEN);
+        currentUser = user;
+        currentUserInfo = res.user;
+        data = { records: [], notes: {}, moods: {}, reflections: {}, timerLogs: [], todos: [], todoDone: [], scores: [], todayPlan: null };
+        document.getElementById('authOverlay').classList.add('hidden');
+        updateUserUI();
+        renderAll();
+        showToast('🎉 注册成功！欢迎 ' + user + '！');
+        document.getElementById('regUser').value = '';
+        document.getElementById('regPass').value = '';
+        document.getElementById('regSchool').value = '';
+    } catch (e) {
+        err.textContent = e.message;
+        err.style.display = 'block';
+    }
 }
 
-// ============================================================
-//  用户切换 & 登录注册
-// ============================================================
-function toggleUserDropdown() { document.getElementById('userDropdown').classList.toggle('show'); }
-function renderUserDropdown() {
-    document.getElementById('userList').innerHTML = Object.keys(usersDB).map(name => {
-        const u = usersDB[name]; const isActive = name === currentUser;
-        return `<div class="u-item" onclick="switchUser('${name}')"><span>${u.avatar||'🧑‍🎓'}</span><span>${name}</span>${isActive?'<span class=\"check\">✓</span>':''}</div>`;
-    }).join('');
-}
-function switchUser(name) {
-    if (name === currentUser) { document.getElementById('userDropdown').classList.remove('show'); return; }
-    if (usersDB[name]) { saveCurrentUser(name); document.getElementById('userDropdown').classList.remove('show'); initUserSession(); }
-}
 function doLogout() {
-    localStorage.removeItem(CURRENT_USER_KEY);
-    currentUser = null; data = null;
+    localStorage.removeItem('cloud_token');
+    CLOUD_TOKEN = '';
+    currentUser = '';
+    currentUserInfo = null;
+    data = { records: [], notes: {}, moods: {}, reflections: {}, timerLogs: [], todos: [], todoDone: [], scores: [], todayPlan: null };
     document.getElementById('authOverlay').classList.remove('hidden');
     document.getElementById('userDropdown').classList.remove('show');
 }
 
-function switchAuthTab(tab) {
-    document.getElementById('loginTab').classList.toggle('active',tab==='login');
-    document.getElementById('registerTab').classList.toggle('active',tab==='register');
-    document.getElementById('authLoginForm').style.display=tab==='login'?'block':'none';
-    document.getElementById('authRegisterForm').style.display=tab==='register'?'block':'none';
-    document.getElementById('loginError').style.display='none';
-    document.getElementById('regError').style.display='none';
+// ============================================================
+//  数据加载
+// ============================================================
+async function loadUserData() {
+    try {
+        const profile = await api('/api/user/profile');
+        currentUserInfo = profile.user;
+        data = {
+            records: profile.data.records || [],
+            notes: profile.data.notes || {},
+            moods: profile.data.moods || {},
+            reflections: profile.data.reflections || {},
+            timerLogs: profile.data.timerLogs || [],
+            todos: profile.data.todos || [],
+            todoDone: profile.data.todoDone || {},
+            scores: profile.data.scores || [],
+            todayPlan: profile.data.todayPlan || null
+        };
+    } catch (e) {
+        console.warn('加载数据失败:', e.message);
+    }
 }
-function selectRegAvatar(el, av) { document.querySelectorAll('#authRegisterForm .md-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); selectedRegAvatar=av; }
 
-function doLogin() {
-    const user=document.getElementById('loginUser').value.trim();
-    const pass=document.getElementById('loginPass').value.trim();
-    const err=document.getElementById('loginError');
-    if(!user||!pass){err.textContent='请输入用户名和密码';err.style.display='block';return;}
-    if(!usersDB[user]){err.textContent='用户不存在，请先注册';err.style.display='block';return;}
-    if(usersDB[user].password!==pass){err.textContent='密码错误';err.style.display='block';return;}
-    err.style.display='none';
-    saveCurrentUser(user); initUserSession();
-    showToast('👋 欢迎回来，'+user+'！');
-    document.getElementById('loginUser').value=''; document.getElementById('loginPass').value='';
+function updateUserUI() {
+    document.getElementById('currentUserAvatar').textContent = currentUserInfo?.avatar || '🧑‍🎓';
+    document.getElementById('currentUserName').textContent = currentUser;
 }
-function doRegister() {
-    const user=document.getElementById('regUser').value.trim();
-    const pass=document.getElementById('regPass').value.trim();
-    const school=document.getElementById('regSchool').value.trim();
-    const err=document.getElementById('regError');
-    if(!user){err.textContent='请输入用户名';err.style.display='block';return;}
-    if(pass.length<4){err.textContent='密码至少4位';err.style.display='block';return;}
-    if(usersDB[user]){err.textContent='用户名已存在';err.style.display='block';return;}
-    err.style.display='none';
-    usersDB[user]={password:pass,avatar:selectedRegAvatar,school:school,bio:'考研人，正在努力中！',joined:new Date().toISOString(),data:getDefaultUserData()};
-    usersDB[user].data.targetSchool=school;
-    saveUsersDB(); saveCurrentUser(user); initUserSession();
-    showToast('🎉 注册成功！欢迎 '+user+'！',true);
-    document.getElementById('regUser').value=''; document.getElementById('regPass').value=''; document.getElementById('regSchool').value='';
+
+// 用户下拉（仅显示当前用户 + 退出）
+function toggleUserDropdown() {
+    document.getElementById('userDropdown').classList.toggle('show');
 }
+document.getElementById('userList').innerHTML = '';
 
 // ============================================================
 //  工具函数
 // ============================================================
-function getDateStr(d){const date=d||new Date();return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');}
-function isChecked(dateStr){return data.records.includes(dateStr);}
-function getDaysInMonth(y,m){return new Date(y,m+1,0).getDate();}
-function getFirstDay(y,m){return new Date(y,m,1).getDay();}
-function calcStreak(){
-    if(!data.records.length)return 0;
-    const sorted=[...data.records].sort().reverse();
-    let streak=0;
-    const today=new Date();
-    const diffDays=Math.floor((today-new Date(sorted[0]))/(1000*60*60*24));
-    if(diffDays>1)return 0;
-    for(let i=0;i<sorted.length;i++){
-        const curr=new Date(sorted[i]);
-        if(i===0){streak=1;continue;}
-        const diff=Math.floor((new Date(sorted[i-1])-curr)/(1000*60*60*24));
-        if(diff===1)streak++;else break;
+function getDateStr(d) {
+    const date = d || new Date();
+    return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+}
+function getDaysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+function getFirstDay(y, m) { return new Date(y, m, 1).getDay(); }
+function calcStreak() {
+    if (!data.records.length) return 0;
+    const sorted = [...data.records].sort().reverse();
+    let streak = 0;
+    const today = new Date();
+    const diffDays = Math.floor((today - new Date(sorted[0])) / (1000 * 60 * 60 * 24));
+    if (diffDays > 1) return 0;
+    for (let i = 0; i < sorted.length; i++) {
+        if (i === 0) { streak = 1; continue; }
+        const diff = Math.floor((new Date(sorted[i - 1]) - new Date(sorted[i])) / (1000 * 60 * 60 * 24));
+        if (diff === 1) streak++; else break;
     }
     return streak;
 }
-function calcBestStreak(){
-    if(!data.records.length)return 0;
-    const sorted=[...data.records].sort();
-    let best=1,current=1;
-    for(let i=1;i<sorted.length;i++){
-        const diff=Math.floor((new Date(sorted[i])-new Date(sorted[i-1]))/(1000*60*60*24));
-        if(diff===1){current++;best=Math.max(best,current);}else current=1;
+function calcBestStreak() {
+    if (!data.records.length) return 0;
+    const sorted = [...data.records].sort();
+    let best = 1, cur = 1;
+    for (let i = 1; i < sorted.length; i++) {
+        const diff = Math.floor((new Date(sorted[i]) - new Date(sorted[i - 1])) / (1000 * 60 * 60 * 24));
+        if (diff === 1) { cur++; best = Math.max(best, cur); } else cur = 1;
     }
     return best;
 }
-function getTotalHours(){return data.timerLogs.reduce((s,l)=>s+l.seconds,0)/3600;}
-function getMonthDays(y,m){const p=y+'-'+String(m+1).padStart(2,'0');return data.records.filter(r=>r.startsWith(p)).length;}
-function getMonthHours(y,m){const p=y+'-'+String(m+1).padStart(2,'0');return data.timerLogs.filter(l=>l.date.startsWith(p)).reduce((s,l)=>s+l.seconds,0)/3600;}
-function calcExamDays(){const exam=new Date(2025,11,20);const today=new Date();today.setHours(0,0,0,0);return Math.max(0,Math.ceil((exam-today)/(1000*60*60*24)));}
-
-// ============================================================
-//  渲染
-// ============================================================
-function renderAll(){
-    renderGreeting();renderCountdown();renderStats();renderButton();renderWeekDays();
-    renderCalendar();renderRecords();renderSubjectBreakdown();renderBadges();
-    renderTodos();renderProfile();renderLeaderboard();renderFeeds();renderRoom();
-    if(document.getElementById('pageRank').classList.contains('active'))renderLeaderboard();
+function getTotalHours() { return data.timerLogs.reduce((s, l) => s + (l.seconds || 0), 0) / 3600; }
+function getMonthDays(y, m) {
+    const p = y + '-' + String(m + 1).padStart(2, '0');
+    return data.records.filter(r => r.startsWith(p)).length;
+}
+function calcExamDays() {
+    const examStr = currentUserInfo?.exam_date || '2025-12-20';
+    const exam = new Date(examStr);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return Math.max(0, Math.ceil((exam - today) / (1000 * 60 * 60 * 24)));
 }
 
 // ============================================================
-//  页面切换
+//  页面导航
 // ============================================================
 function switchPage(page) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
+    const pageEl = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
+    if (pageEl) pageEl.classList.add('active');
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const navMap = { home: 0, room: 1, rank: 2, profile: 3 };
     document.querySelectorAll('.nav-item')[navMap[page]].classList.add('active');
@@ -1092,12 +1110,18 @@ function switchPage(page) {
     if (page === 'profile') renderProfile();
     renderCalendar();
 }
-function openModal(id) { document.getElementById(id).classList.add('show'); if(id==='statsModal')renderStatsModal(); }
+function openModal(id) { document.getElementById(id).classList.add('show'); if (id === 'statsModal') renderStatsModal(); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
 // ============================================================
-//  渲染函数
+//  渲染
 // ============================================================
+function renderAll() {
+    renderGreeting(); renderCountdown(); renderStats(); renderButton(); renderDailyPlan(); renderWeekDays();
+    renderCalendar(); renderRecords(); renderSubjectBreakdown(); renderSubjectTags(); renderBadges();
+    renderTodos(); renderScores(); renderProfile(); renderLeaderboard(); renderFeeds(); renderRoom();
+}
+
 function renderGreeting() {
     const h = new Date().getHours();
     const greet = h < 6 ? '🌙 夜深了' : h < 9 ? '🌅 早上好' : h < 12 ? '☀️ 上午好' : h < 14 ? '🌤 中午好' : h < 18 ? '🌇 下午好' : '🌆 晚上好';
@@ -1108,6 +1132,7 @@ function renderGreeting() {
 
 function renderCountdown() {
     document.getElementById('daysLeft').textContent = calcExamDays();
+    document.getElementById('examDateLabel').textContent = currentUserInfo?.exam_date || '2025-12-20';
 }
 
 function renderStats() {
@@ -1144,286 +1169,729 @@ function renderWeekDays() {
         const ds = getDateStr(d);
         const isToday = ds === getDateStr();
         const checked = data.records.includes(ds);
-        const dayHours = data.timerLogs.filter(l => l.date === ds).reduce((s, l) => s + l.seconds, 0) / 3600;
+        const dayHours = data.timerLogs.filter(l => l.date === ds).reduce((s, l) => s + (l.seconds || 0), 0) / 3600;
         const el = document.createElement('div');
         el.className = 'week-day';
-        el.innerHTML = `<div class="d">${names[i]}</div><div class="circle ${isToday?'today':''} ${checked?'checked':''}">${d.getDate()}</div><div class="hours">${dayHours>0?dayHours.toFixed(1)+'h':''}</div>`;
+        el.innerHTML = `<div class="d">${names[i]}</div><div class="circle ${isToday ? 'today' : ''} ${checked ? 'checked' : ''}">${d.getDate()}</div><div class="hours">${dayHours > 0 ? dayHours.toFixed(1) + 'h' : ''}</div>`;
         weekDays.appendChild(el);
     }
 }
 
 function renderCalendar() {
     const now = new Date();
-    if (currentYear===undefined||currentMonth===undefined){currentYear=now.getFullYear();currentMonth=now.getMonth();}
-    const ms=['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
-    document.getElementById('calMonth').textContent=currentYear+'年 '+ms[currentMonth];
-    const days=getDaysInMonth(currentYear,currentMonth);const firstDay=getFirstDay(currentYear,currentMonth);
-    const grid=document.getElementById('daysGrid');grid.innerHTML='';
-    for(let i=0;i<firstDay;i++){const el=document.createElement('div');el.className='day-cell other';grid.appendChild(el);}
-    for(let d=1;d<=days;d++){
-        const ds=currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-        const isToday=ds===getDateStr();const checked=data.records.includes(ds);
-        const hasNote=data.notes&&data.notes[ds];
-        const el=document.createElement('div');el.className='day-cell';
-        if(isToday)el.classList.add('today');if(checked)el.classList.add('checked');
-        el.textContent=d;if(hasNote){const dot=document.createElement('div');dot.className='dot';el.appendChild(dot);}
+    if (currentYear === undefined) { currentYear = now.getFullYear(); currentMonth = now.getMonth(); }
+    const ms = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+    document.getElementById('calMonth').textContent = currentYear + '年 ' + ms[currentMonth];
+    const days = getDaysInMonth(currentYear, currentMonth);
+    const firstDay = getFirstDay(currentYear, currentMonth);
+    const grid = document.getElementById('daysGrid'); grid.innerHTML = '';
+    for (let i = 0; i < firstDay; i++) {
+        const el = document.createElement('div'); el.className = 'day-cell other'; grid.appendChild(el);
+    }
+    for (let d = 1; d <= days; d++) {
+        const ds = currentYear + '-' + String(currentMonth + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+        const isToday = ds === getDateStr();
+        const checked = data.records.includes(ds);
+        const hasNote = data.notes && data.notes[ds];
+        const el = document.createElement('div'); el.className = 'day-cell';
+        if (isToday) el.classList.add('today');
+        if (checked) el.classList.add('checked');
+        el.textContent = d;
+        if (hasNote) { const dot = document.createElement('div'); dot.className = 'dot'; el.appendChild(dot); }
         grid.appendChild(el);
     }
 }
-function changeMonth(delta){currentMonth+=delta;if(currentMonth>11){currentMonth=0;currentYear++;}if(currentMonth<0){currentMonth=11;currentYear--;}renderCalendar();}
+function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    renderCalendar();
+}
 
 function renderRecords() {
-    const container=document.getElementById('recordsList');
-    if(!data.records.length){container.innerHTML='<div class="empty-state"><div class="icon">📝</div><div class="msg">还没有打卡记录<br>今天开始你的第一次打卡吧！</div></div>';return;}
-    const sorted=[...data.records].sort().reverse().slice(0,30);
-    container.innerHTML=sorted.map(ds=>{
-        const note=data.notes?data.notes[ds]:'';const mood=data.moods?data.moods[ds]:'';
-        const h=data.timerLogs.filter(l=>l.date===ds).reduce((s,l)=>s+l.seconds,0)/3600;
-        return `<div class="record-item"><div class="record-icon">${mood||'📌'}</div><div class="record-info"><div class="date">${ds}</div><div class="detail">学习 ${h.toFixed(1)} 小时</div>${note?'<div class="note">📖 '+note+'</div>':''}</div><div class="record-badge">✅ 已打卡</div></div>`;
+    const container = document.getElementById('recordsList');
+    if (!data.records.length) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">📝</div><div class="msg">还没有打卡记录<br>今天开始你的第一次打卡吧！</div></div>';
+        return;
+    }
+    const sorted = [...data.records].sort().reverse().slice(0, 30);
+    container.innerHTML = sorted.map(ds => {
+        const note = data.notes ? data.notes[ds] : '';
+        const mood = data.moods ? data.moods[ds] : '';
+        const h = data.timerLogs.filter(l => l.date === ds).reduce((s, l) => s + (l.seconds || 0), 0) / 3600;
+        return `<div class="record-item"><div class="record-icon">${mood || '📌'}</div><div class="record-info"><div class="date">${ds}</div><div class="detail">学习 ${h.toFixed(1)} 小时</div>${note ? '<div class="note">📖 ' + note + '</div>' : ''}</div><div class="record-badge">✅ 已打卡</div></div>`;
     }).join('');
 }
 
+function renderSubjectTags() {
+    const subs = (currentUserInfo?.subjects || '政治,英语,数学,专业课').split(',').map(s => s.trim());
+    const container = document.getElementById('subjectTags');
+    const emojis = ['📖', '🇬🇧', '📐', '🔬', '📝', '🎯', '💻', '🧪'];
+    container.innerHTML = subs.map((s, i) =>
+        `<button class="subject-tag ${s === currentSubject ? 'active' : ''}" data-subject="${s}">${emojis[i % emojis.length]} ${s}</button>`
+    ).join('');
+    // 更新当前科目（如果当前不在新列表中）
+    if (!subs.includes(currentSubject) && subs.length > 0) currentSubject = subs[0];
+}
+
 function renderSubjectBreakdown() {
-    const c=document.getElementById('subjectBreakdown');const subs=['政治','英语','数学','专业课'];
-    const t={};subs.forEach(s=>t[s]=0);data.timerLogs.forEach(l=>{const s=l.subject||'政治';if(t[s]!==undefined)t[s]+=l.seconds;});
-    const max=Math.max(...Object.values(t),1);const colors=['#6c63ff','#ff6584','#ffc857','#2ecc71'];
-    c.innerHTML=subs.map((s,i)=>`<div class="subject-bar-item"><div class="sbj">${s}</div><div class="track"><div class="fill" style="width:${(t[s]/max*100).toFixed(0)}%;background:${colors[i]};"></div></div><div class="hours">${(t[s]/3600).toFixed(1)}h</div></div>`).join('');
+    const c = document.getElementById('subjectBreakdown');
+    const subs = (currentUserInfo?.subjects || '政治,英语,数学,专业课').split(',').map(s => s.trim());
+    const t = {}; subs.forEach(s => t[s] = 0);
+    data.timerLogs.forEach(l => {
+        const s = l.subject || subs[0];
+        if (t[s] !== undefined) t[s] += (l.seconds || 0);
+    });
+    const max = Math.max(...Object.values(t), 1);
+    const colors = ['#6c63ff', '#ff6584', '#ffc857', '#2ecc71', '#3498db', '#e74c3c', '#1abc9c', '#9b59b6'];
+    c.innerHTML = subs.map((s, i) => `<div class="subject-bar-item"><div class="sbj">${s}</div><div class="track"><div class="fill" style="width:${(t[s] / max * 100).toFixed(0)}%;background:${colors[i % colors.length]};"></div></div><div class="hours">${(t[s] / 3600).toFixed(1)}h</div></div>`).join('');
 }
 
 // ============================================================
-//  打卡
+//  打卡（云端）
 // ============================================================
-function doCheckin(){
-    const today=getDateStr();
-    if(data.records.includes(today)){showToast('✅ 今天已经打过卡啦！');return;}
-    data.records.push(today);
-    const note=document.getElementById('studyNote').value.trim();
-    if(note){if(!data.notes)data.notes={};data.notes[today]=note;}
-    if(selectedMood){if(!data.moods)data.moods={};data.moods[today]=selectedMood;}
-    const streak=calcStreak();lastCheckinAchievements=[];
-    if(streak===7)lastCheckinAchievements.push({icon:'🔥',title:'连续7天！',desc:'坚持了一周，好习惯正在养成！'});
-    if(streak===30)lastCheckinAchievements.push({icon:'💪',title:'连续30天！',desc:'一个月不间断，太棒了！'});
-    if(streak===100)lastCheckinAchievements.push({icon:'🏆',title:'连续100天！',desc:'百天打卡，学霸就是你！'});
-    if(data.records.length===1)lastCheckinAchievements.push({icon:'🎯',title:'第一次打卡',desc:'迈出了第一步！'});
-    if(data.records.length===100)lastCheckinAchievements.push({icon:'💯',title:'打卡100次！',desc:'坚持打卡100次！'});
-    saveData();renderAll();document.getElementById('studyNote').value='';selectedMood='';
-    document.querySelectorAll('.mood-picker .md-btn').forEach(b=>b.classList.remove('active'));
-    showToast('🎉 打卡成功！');
-    if(lastCheckinAchievements.length>0)setTimeout(()=>showAchievement(lastCheckinAchievements[0]),600);
-    if(streak>0&&streak%7===0)launchConfetti();
+async function doCheckin() {
+    const today = getDateStr();
+    if (data.records.includes(today)) { showToast('✅ 今天已经打过卡啦！'); return; }
+    const note = document.getElementById('studyNote').value.trim();
+    const todayHours = data.timerLogs.filter(l => l.date === today).reduce((s, l) => s + (l.seconds || 0), 0) / 3600;
+    try {
+        await api('/api/checkin', {
+            method: 'POST',
+            body: JSON.stringify({ date: today, note: note || '', mood: selectedMood || '', hours: todayHours })
+        });
+        // 重新加载数据
+        await loadUserData();
+        renderAll();
+        document.getElementById('studyNote').value = '';
+        selectedMood = '';
+        document.querySelectorAll('.mood-picker .md-btn').forEach(b => b.classList.remove('active'));
+        showToast('🎉 打卡成功！');
+        const streak = calcStreak();
+        if (streak === 7) setTimeout(() => showAchievement({ icon: '🔥', title: '连续7天！', desc: '坚持了一周！' }), 600);
+        if (streak === 30) setTimeout(() => showAchievement({ icon: '💪', title: '连续30天！', desc: '一个月不间断！' }), 600);
+        if (streak > 0 && streak % 7 === 0) launchConfetti();
+    } catch (e) {
+        showToast('❌ 打卡失败：' + e.message);
+    }
 }
 
 // ============================================================
 //  番茄计时器
 // ============================================================
-function setPomoMode(mode){
-    if(timerRunning){showToast('⏸ 请先停止计时再切换模式');return;}
-    timerMode=mode;document.querySelectorAll('.pm-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelector('.pm-btn[data-mode="'+mode+'"]').classList.add('active');resetTimer();
+function setPomoMode(mode) {
+    if (timerRunning) { showToast('⏸ 请先停止计时再切换模式'); return; }
+    timerMode = mode;
+    document.querySelectorAll('.pm-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.pm-btn[data-mode="' + mode + '"]').classList.add('active');
+    resetTimer();
 }
-function toggleTimer(){
-    const btn=document.getElementById('timerStartBtn');
-    if(timerRunning){
-        clearInterval(timerInterval);timerRunning=false;btn.textContent='▶ 继续';btn.className='timer-btn start';
+function toggleTimer() {
+    const btn = document.getElementById('timerStartBtn');
+    if (timerRunning) {
+        clearInterval(timerInterval); timerRunning = false;
+        btn.textContent = '▶ 继续'; btn.className = 'timer-btn start';
         document.getElementById('timerDisplay').classList.remove('active');
-    }else{
-        timerRunning=true;btn.textContent='⏸ 暂停';btn.className='timer-btn stop';
+    } else {
+        timerRunning = true;
+        btn.textContent = '⏸ 暂停'; btn.className = 'timer-btn stop';
         document.getElementById('timerDisplay').classList.add('active');
-        if(timerSeconds===0)timerSeconds=POMO_TIMES[timerMode];
-        timerInterval=setInterval(()=>{
-            timerSeconds--;updateTimerDisplay();
-            if(timerSeconds<=0){
-                clearInterval(timerInterval);timerRunning=false;btn.textContent='▶ 开始';btn.className='timer-btn start';
+        if (timerSeconds === 0) timerSeconds = POMO_TIMES[timerMode];
+        timerInterval = setInterval(() => {
+            timerSeconds--; updateTimerDisplay();
+            if (timerSeconds <= 0) {
+                clearInterval(timerInterval); timerRunning = false;
+                btn.textContent = '▶ 开始'; btn.className = 'timer-btn start';
                 document.getElementById('timerDisplay').classList.remove('active');
-                if(timerMode==='pomo'){
-                    logTimer(currentSubject);showToast('🍅 专注完成！休息一下吧！');
-                    data.pomoCount=(data.pomoCount||0)+1;saveData();
-                    if(data.pomoCount===10)showAchievement({icon:'🍅',title:'番茄达人',desc:'累计完成10个番茄钟！'});
-                    if(data.pomoCount===50)showAchievement({icon:'🏅',title:'番茄大师',desc:'累计完成50个番茄钟！'});
+                if (timerMode === 'pomo') {
+                    logTimer(currentSubject);
+                    showToast('🍅 专注完成！休息一下吧！');
                     launchConfetti();
-                }else showToast('☕ 休息结束，继续加油！');
+                } else showToast('☕ 休息结束，继续加油！');
             }
-        },1000);
+        }, 1000);
     }
 }
-function resetTimer(){clearInterval(timerInterval);timerRunning=false;timerSeconds=POMO_TIMES[timerMode];document.getElementById('timerStartBtn').textContent='▶ 开始';document.getElementById('timerStartBtn').className='timer-btn start';document.getElementById('timerDisplay').classList.remove('active');updateTimerDisplay();}
-function updateTimerDisplay(){const m=Math.floor(timerSeconds/60);const s=timerSeconds%60;document.getElementById('timerDisplay').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
-document.getElementById('subjectTags').addEventListener('click',function(e){if(e.target.classList.contains('subject-tag')){document.querySelectorAll('.subject-tag').forEach(t=>t.classList.remove('active'));e.target.classList.add('active');currentSubject=e.target.dataset.subject;}});
-function logTimer(subject){if(!data.timerLogs)data.timerLogs=[];const today=getDateStr();data.timerLogs.push({date:today,seconds:POMO_TIMES.pomo,subject:subject,ts:Date.now()});saveData();renderAll();}
-function selectMood(el){document.querySelectorAll('.mood-picker .md-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');selectedMood=el.dataset.mood;}
+function resetTimer() {
+    clearInterval(timerInterval); timerRunning = false;
+    timerSeconds = POMO_TIMES[timerMode];
+    document.getElementById('timerStartBtn').textContent = '▶ 开始';
+    document.getElementById('timerStartBtn').className = 'timer-btn start';
+    document.getElementById('timerDisplay').classList.remove('active');
+    updateTimerDisplay();
+}
+function updateTimerDisplay() {
+    const m = Math.floor(timerSeconds / 60);
+    const s = timerSeconds % 60;
+    document.getElementById('timerDisplay').textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+document.getElementById('subjectTags').addEventListener('click', function (e) {
+    if (e.target.classList.contains('subject-tag')) {
+        document.querySelectorAll('.subject-tag').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        currentSubject = e.target.dataset.subject;
+    }
+});
+async function logTimer(subject) {
+    const today = getDateStr();
+    const seconds = POMO_TIMES.pomo;
+    // 乐观更新
+    data.timerLogs.push({ date: today, seconds, subject, ts: Date.now() });
+    renderAll();
+    try {
+        await api('/api/timer/sessions', {
+            method: 'POST',
+            body: JSON.stringify({ date: today, seconds, subject: subject, mode: 'pomo' })
+        });
+    } catch (e) {
+        showToast('⚠️ 计时同步失败');
+    }
+}
+function selectMood(el) {
+    document.querySelectorAll('.mood-picker .md-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    selectedMood = el.dataset.mood;
+}
+
+// ============================================================
+//  每日计划 & 复盘
+// ============================================================
+function renderDailyPlan() {
+    const today = getDateStr();
+    const plan = data.todayPlan;
+    const goals = plan?.goals || [];
+    const completed = plan?.completed || [];
+    const summary = plan?.summary || '';
+
+    const listEl = document.getElementById('dailyPlanList');
+    if (!goals.length) {
+        listEl.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text3);font-size:13px;">📋 还没有今日计划，添加你的学习目标吧</div>';
+    } else {
+        listEl.innerHTML = goals.map((g, i) => {
+            const done = completed.includes(g);
+            return `<div class="todo-item"><div class="todo-check ${done ? 'done' : ''}" onclick="togglePlanGoal('${g.replace(/'/g, "\\'")}')">${done ? '✓' : ''}</div><div class="todo-text ${done ? 'done' : ''}">${g}</div><div class="todo-del" onclick="removePlanGoal(${i})">✕</div></div>`;
+        }).join('');
+    }
+
+    const summaryEl = document.getElementById('planSummary');
+    if (summaryEl.value !== summary) summaryEl.value = summary;
+}
+
+async function addPlanGoal() {
+    const input = document.getElementById('planGoalInput');
+    const text = input.value.trim();
+    if (!text) return;
+    const plan = data.todayPlan || { goals: [], completed: [], summary: '' };
+    plan.goals.push(text);
+    data.todayPlan = plan;
+    await savePlan();
+    renderDailyPlan();
+    input.value = '';
+}
+
+async function togglePlanGoal(goal) {
+    const plan = data.todayPlan || { goals: [], completed: [], summary: '' };
+    const idx = plan.completed.indexOf(goal);
+    if (idx >= 0) plan.completed.splice(idx, 1);
+    else plan.completed.push(goal);
+    data.todayPlan = plan;
+    await savePlan();
+    renderDailyPlan();
+    if (idx < 0) showToast('✅ ' + goal + ' 完成！');
+}
+
+async function removePlanGoal(i) {
+    const plan = data.todayPlan;
+    if (!plan) return;
+    const goal = plan.goals[i];
+    plan.goals.splice(i, 1);
+    const ci = plan.completed.indexOf(goal);
+    if (ci >= 0) plan.completed.splice(ci, 1);
+    data.todayPlan = plan;
+    await savePlan();
+    renderDailyPlan();
+}
+
+async function savePlanSummary() {
+    const summary = document.getElementById('planSummary').value.trim();
+    if (!data.todayPlan) data.todayPlan = { goals: [], completed: [], summary: '' };
+    data.todayPlan.summary = summary;
+    await savePlan();
+}
+
+async function savePlan() {
+    const today = getDateStr();
+    const plan = data.todayPlan || { goals: [], completed: [], summary: '' };
+    try {
+        await api('/api/plans/' + today, {
+            method: 'PUT',
+            body: JSON.stringify({ goals: plan.goals, completed: plan.completed, summary: plan.summary })
+        });
+    } catch (e) { /* ignore */ }
+}
+
+// ============================================================
+//  成绩追踪
+// ============================================================
+function renderScores() {
+    const c = document.getElementById('scoreList');
+    const scores = data.scores || [];
+    if (!scores.length) {
+        c.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">📝 还没有成绩记录<br>做完模拟题来记录一下分数吧</div>';
+        return;
+    }
+    const sorted = [...scores].sort((a, b) => new Date(b.date) - new Date(a.date));
+    c.innerHTML = sorted.map((s, i) => {
+        const pct = s.total > 0 ? (s.score / s.total * 100).toFixed(0) : 0;
+        const color = pct >= 80 ? 'var(--green)' : pct >= 60 ? 'var(--accent2)' : 'var(--red)';
+        return `<div class="todo-item">
+            <div class="todo-check" style="font-size:10px;width:auto;padding:0 6px;border-radius:8px;background:${color};border-color:${color};color:#fff;">${pct}%</div>
+            <div class="todo-text"><b>${s.subject}</b> · ${s.exam_name || '模拟测试'}</div>
+            <span style="font-size:12px;color:var(--text3);margin-right:8px;">${s.score}/${s.total}</span>
+            <div class="todo-del" onclick="delScore(${s.id})">✕</div>
+        </div>`;
+    }).join('');
+}
+
+function showAddScore() {
+    const form = document.getElementById('addScoreForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    document.getElementById('scoreDate').value = getDateStr();
+    // 更新科目选项
+    const subjects = (currentUserInfo?.subjects || '政治,英语,数学,专业课').split(',');
+    const sel = document.getElementById('scoreSubject');
+    sel.innerHTML = subjects.map(s => `<option>${s.trim()}</option>`).join('');
+}
+
+async function addScore() {
+    const subject = document.getElementById('scoreSubject').value;
+    const exam_name = document.getElementById('scoreExamName').value.trim();
+    const score = parseFloat(document.getElementById('scoreValue').value);
+    const total = parseFloat(document.getElementById('scoreTotal').value) || 100;
+    const date = document.getElementById('scoreDate').value;
+    const note = exam_name;
+
+    if (!subject || isNaN(score)) { showToast('❌ 请填写完整信息'); return; }
+
+    try {
+        const res = await api('/api/scores', {
+            method: 'POST',
+            body: JSON.stringify({ date, subject, exam_name, score, total, note })
+        });
+        await loadUserData();
+        renderScores();
+        document.getElementById('addScoreForm').style.display = 'none';
+        document.getElementById('scoreValue').value = '';
+        document.getElementById('scoreExamName').value = '';
+        showToast('📝 成绩已记录');
+    } catch (e) { showToast('❌ 保存失败'); }
+}
+
+async function delScore(id) {
+    try {
+        await api('/api/scores/' + id, { method: 'DELETE' });
+        await loadUserData();
+        renderScores();
+    } catch (e) { showToast('❌ 删除失败'); }
+}
+
+// ============================================================
+//  设置保存
+// ============================================================
+async function saveProfileSettings() {
+    const school = document.getElementById('settingsTargetSchool').value.trim();
+    const exam_date = document.getElementById('settingsExamDate').value;
+    const subjects = document.getElementById('settingsSubjects').value.trim();
+
+    try {
+        const res = await api('/api/user/profile', {
+            method: 'PUT',
+            body: JSON.stringify({
+                avatar: currentUserInfo?.avatar || '🧑‍🎓',
+                school: currentUserInfo?.school || '',
+                bio: currentUserInfo?.bio || '',
+                target_school: school || currentUserInfo?.target_school || '',
+                daily_goal: currentUserInfo?.daily_goal || 4,
+                exam_date: exam_date || currentUserInfo?.exam_date || '2025-12-20',
+                subjects: subjects || currentUserInfo?.subjects || '政治,英语,数学,专业课'
+            })
+        });
+        currentUserInfo = res.user;
+        renderCountdown();
+        renderSubjectBreakdown();
+        showToast('✅ 设置已保存');
+    } catch (e) { showToast('❌ 保存失败: ' + e.message); }
+}
+
+function renderProfile() {
+    if (!currentUserInfo) return;
+    document.getElementById('profileAvatar').textContent = currentUserInfo.avatar || '🧑‍🎓';
+    document.getElementById('profileName').textContent = currentUser;
+    document.getElementById('profileBio').textContent = currentUserInfo.bio || '考研人，正在努力中！';
+    document.getElementById('profileSchool').textContent = '🎯 ' + (currentUserInfo.target_school || '目标院校：未设置');
+    document.getElementById('profileDays').textContent = data.records.length;
+    document.getElementById('profileHours').textContent = getTotalHours().toFixed(1);
+    document.getElementById('profileStreak').textContent = calcBestStreak();
+
+    // 填充设置表单
+    const tsEl = document.getElementById('settingsTargetSchool');
+    const edEl = document.getElementById('settingsExamDate');
+    const sjEl = document.getElementById('settingsSubjects');
+    if (tsEl.value === '') tsEl.value = currentUserInfo.target_school || '';
+    if (edEl.value === '') edEl.value = currentUserInfo.exam_date || '2025-12-20';
+    if (sjEl.value === '') sjEl.value = currentUserInfo.subjects || '政治,英语,数学,专业课';
+}
 
 // ============================================================
 //  Toast & 彩纸 & 成就
 // ============================================================
-function showToast(msg,isGood){
-    const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className='toast';t.textContent=msg;
-    if(isGood)t.style.borderColor='var(--green)';c.appendChild(t);
-    requestAnimationFrame(()=>t.classList.add('show'));
-    setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),400);},2000);
+function showToast(msg) {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+    c.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 2000);
 }
-function launchConfetti(){
-    const c=document.getElementById('confettiContainer');const colors=['#ff6584','#6c63ff','#ffc857','#2ecc71','#3498db','#e74c3c'];
-    for(let i=0;i<40;i++){const el=document.createElement('div');el.className='confetti';el.style.left=Math.random()*100+'%';el.style.width=(Math.random()*8+4)+'px';el.style.height=(Math.random()*8+4)+'px';el.style.background=colors[Math.floor(Math.random()*colors.length)];el.style.animationDuration=(Math.random()*2+1.5)+'s';el.style.animationDelay=Math.random()*1+'s';c.appendChild(el);}
-    setTimeout(()=>c.innerHTML='',4000);
+function launchConfetti() {
+    const c = document.getElementById('confettiContainer');
+    const colors = ['#ff6584', '#6c63ff', '#ffc857', '#2ecc71', '#3498db', '#e74c3c'];
+    for (let i = 0; i < 40; i++) {
+        const el = document.createElement('div'); el.className = 'confetti';
+        el.style.left = Math.random() * 100 + '%';
+        el.style.width = (Math.random() * 8 + 4) + 'px';
+        el.style.height = (Math.random() * 8 + 4) + 'px';
+        el.style.background = colors[Math.floor(Math.random() * colors.length)];
+        el.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+        el.style.animationDelay = Math.random() * 1 + 's';
+        c.appendChild(el);
+    }
+    setTimeout(() => c.innerHTML = '', 4000);
 }
-function showAchievement(ach){document.getElementById('achieveIcon').textContent=ach.icon;document.getElementById('achieveTitle').textContent=ach.title;document.getElementById('achieveDesc').textContent=ach.desc;document.getElementById('achievePopup').classList.add('show');setTimeout(()=>document.getElementById('achievePopup').classList.remove('show'),3000);}
-function checkAchievements(){
-    if(!data)return;if(!data.badges)data.badges=[];
-    const allBadges=[
-        {id:'first',icon:'🎯',name:'第一步',check:()=>data.records.length>=1},
-        {id:'week',icon:'🔥',name:'连续7天',check:()=>calcStreak()>=7},
-        {id:'month',icon:'💪',name:'连续30天',check:()=>calcStreak()>=30},
-        {id:'hundred',icon:'💯',name:'百次打卡',check:()=>data.records.length>=100},
-        {id:'pomo10',icon:'🍅',name:'番茄达人',check:()=>(data.pomoCount||0)>=10},
-        {id:'pomo50',icon:'🏅',name:'番茄大师',check:()=>(data.pomoCount||0)>=50},
-        {id:'hours10',icon:'⏱',name:'学满10h',check:()=>getTotalHours()>=10},
-        {id:'hours100',icon:'⌛',name:'学满100h',check:()=>getTotalHours()>=100},
-        {id:'goal',icon:'⭐',name:'达成目标',check:()=>data.dailyGoal>=8},
-        {id:'school',icon:'🎓',name:'目标明确',check:()=>data.targetSchool&&data.targetSchool.length>0},
+function showAchievement(ach) {
+    document.getElementById('achieveIcon').textContent = ach.icon;
+    document.getElementById('achieveTitle').textContent = ach.title;
+    document.getElementById('achieveDesc').textContent = ach.desc;
+    document.getElementById('achievePopup').classList.add('show');
+    setTimeout(() => document.getElementById('achievePopup').classList.remove('show'), 3000);
+}
+function renderBadges() {
+    const allBadges = [
+        { id: 'first', icon: '🎯', name: '第一步' }, { id: 'week', icon: '🔥', name: '连续7天' },
+        { id: 'month', icon: '💪', name: '连续30天' }, { id: 'hundred', icon: '💯', name: '百次打卡' },
+        { id: 'pomo10', icon: '🍅', name: '番茄达人' }, { id: 'pomo50', icon: '🏅', name: '番茄大师' },
+        { id: 'hours10', icon: '⏱', name: '学满10h' }, { id: 'hours100', icon: '⌛', name: '学满100h' },
+        { id: 'goal', icon: '⭐', name: '达成目标' }, { id: 'school', icon: '🎓', name: '目标明确' },
+        { id: 'streak', icon: '🏆', name: '最强连胜' }, { id: 'social', icon: '👥', name: '研友互动' },
     ];
-    allBadges.forEach(b=>{if(b.check()&&!data.badges.includes(b.id))data.badges.push(b.id);});
-}
-function renderBadges(){
-    const allBadges=[
-        {id:'first',icon:'🎯',name:'第一步'},{id:'week',icon:'🔥',name:'连续7天'},{id:'month',icon:'💪',name:'连续30天'},
-        {id:'hundred',icon:'💯',name:'百次打卡'},{id:'pomo10',icon:'🍅',name:'番茄达人'},{id:'pomo50',icon:'🏅',name:'番茄大师'},
-        {id:'hours10',icon:'⏱',name:'学满10h'},{id:'hours100',icon:'⌛',name:'学满100h'},{id:'goal',icon:'⭐',name:'达成目标'},
-        {id:'school',icon:'🎓',name:'目标明确'},{id:'streak',icon:'🏆',name:'最强连胜'},{id:'social',icon:'👥',name:'研友互动'},
-    ];
-    if(!data.badges)data.badges=[];
-    document.getElementById('badgeGrid').innerHTML=allBadges.map(b=>`<div class="badge-item ${data.badges.includes(b.id)?'unlocked':'locked'}"><div class="icon">${b.icon}</div><div class="name">${b.name}</div></div>`).join('');
-}
-
-// ============================================================
-//  排行榜（全用户）
-// ============================================================
-function switchLB(mode){currentLB=mode;document.querySelectorAll('.lb-tab').forEach(t=>t.classList.remove('active'));document.querySelector('.lb-tab[data-lb="'+mode+'"]').classList.add('active');renderLeaderboard();}
-function renderLeaderboard(){
-    const c=document.getElementById('lbList');const users=Object.keys(usersDB);const now=new Date();
-    const isWeek=(ds)=>{const d=new Date(ds);return Math.floor((now-d)/(1000*60*60*24))<7;};
-    const isMonth=(ds)=>{const d=new Date(ds);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();};
-    const ranked=users.map(name=>{const u=usersDB[name];const d=u.data||getDefaultUserData();let count=0;if(currentLB==='weekly')count=(d.records||[]).filter(r=>isWeek(r)).length;else if(currentLB==='monthly')count=(d.records||[]).filter(r=>isMonth(r)).length;else count=(d.records||[]).length;return{name,avatar:u.avatar||'🧑‍🎓',count,mood:d.moods?d.moods[getDateStr()]:''};}).filter(r=>r.count>0).sort((a,b)=>b.count-a.count);
-    if(!ranked.length){c.innerHTML='<div class="empty-state" style="padding:20px;"><div class="msg">暂无排行数据<br>快去打卡吧！</div></div>';return;}
-    const maxCount=ranked[0].count||1;
-    c.innerHTML=ranked.map((r,i)=>{const rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';const pct=(r.count/maxCount*100).toFixed(0);return `<div class="lb-item"><div class="lb-rank ${rc}">${i<3?['🥇','🥈','🥉'][i]:'#'+(i+1)}</div><span class="lb-mood">${r.avatar}</span><span class="lb-name">${r.name}</span><div class="lb-bar"><div class="lb-bar-fill" style="width:${pct}%;"></div></div><span class="lb-count">${r.count}天</span></div>`;}).join('');
+    const unlocked = [];
+    if (data.records.length >= 1) unlocked.push('first');
+    if (calcStreak() >= 7) unlocked.push('week');
+    if (calcStreak() >= 30) unlocked.push('month');
+    if (data.records.length >= 100) unlocked.push('hundred');
+    if (getTotalHours() >= 10) unlocked.push('hours10');
+    if (getTotalHours() >= 100) unlocked.push('hours100');
+    if (currentUserInfo?.target_school) unlocked.push('school');
+    document.getElementById('badgeGrid').innerHTML = allBadges.map(b =>
+        `<div class="badge-item ${unlocked.includes(b.id) ? 'unlocked' : 'locked'}"><div class="icon">${b.icon}</div><div class="name">${b.name}</div></div>`
+    ).join('');
 }
 
 // ============================================================
-//  自习室
+//  排行榜（云端）
 // ============================================================
-let inStudyRoom=false;
-function renderRoom(){
-    const allUsers=Object.keys(usersDB);const today=getDateStr();
-    const online=allUsers.filter(name=>{const u=usersDB[name];if(!u||!u.data)return false;return u.data.records&&u.data.records.includes(today);});
-    document.getElementById('onlineCount').textContent=online.length;
-    const c=document.getElementById('roomUserList');
-    if(!online.length){c.innerHTML='<div class="empty-state" style="padding:20px;"><div class="msg">暂无在线研友</div></div>';return;}
-    c.innerHTML=online.map(name=>{const u=usersDB[name];const h=(u.data.timerLogs||[]).filter(l=>l.date===today).reduce((s,l)=>s+l.seconds,0)/3600;return `<div class="room-user"><div class="ru-avatar">${u.avatar||'🧑‍🎓'}</div><div class="ru-name">${name}</div><div class="ru-status"><span class="dot"></span>学习中</div><div class="ru-hours">今日 ${h.toFixed(1)}h</div></div>`;}).join('');
+function switchLB(mode) {
+    currentLB = mode;
+    document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.lb-tab[data-lb="' + mode + '"]').classList.add('active');
+    renderLeaderboard();
 }
-function joinStudyRoom(){
-    if(!inStudyRoom){inStudyRoom=true;document.getElementById('roomJoinBtn').textContent='🚪 退出自习室';document.getElementById('roomJoinBtn').style.background='var(--red)';showToast('📚 已进入自习室！');renderRoom();}
-    else{inStudyRoom=false;document.getElementById('roomJoinBtn').textContent='🚪 进入自习室学习';document.getElementById('roomJoinBtn').style.background='';showToast('👋 已退出自习室');}
+async function renderLeaderboard() {
+    const c = document.getElementById('lbList');
+    c.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">加载中...</div>';
+    try {
+        const result = await api('/api/checkins/leaderboard?period=' + currentLB);
+        const rows = result.leaderboard || [];
+        if (!rows.length) {
+            c.innerHTML = '<div class="empty-state" style="padding:20px;"><div class="msg">暂无排行数据<br>快去打卡吧！</div></div>';
+            return;
+        }
+        const maxCount = rows[0].days || 1;
+        c.innerHTML = rows.map((r, i) => {
+            const rc = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+            const pct = ((r.days || 0) / maxCount * 100).toFixed(0);
+            return `<div class="lb-item"><div class="lb-rank ${rc}">${i < 3 ? ['🥇', '🥈', '🥉'][i] : '#' + (i + 1)}</div><span class="lb-mood">${r.avatar || '🧑‍🎓'}</span><span class="lb-name">${r.username}</span><div class="lb-bar"><div class="lb-bar-fill" style="width:${pct}%;"></div></div><span class="lb-count">${r.days || 0}天</span></div>`;
+        }).join('');
+    } catch (e) {
+        c.innerHTML = '<div class="empty-state" style="padding:20px;"><div class="msg">无法连接服务器<br>请检查网络后重试</div></div>';
+    }
 }
 
 // ============================================================
-//  动态
+//  自习室（云端）
 // ============================================================
-function renderFeeds(){
-    const c=document.getElementById('feedList');const feeds=[];
-    Object.keys(usersDB).forEach(name=>{const u=usersDB[name];if(!u||!u.data)return;const d=u.data;(d.records||[]).forEach(r=>{const note=d.notes?d.notes[r]:'';const mood=d.moods?d.moods[r]:'';const h=(d.timerLogs||[]).filter(l=>l.date===r).reduce((s,l)=>s+l.seconds,0)/3600;feeds.push({name,avatar:u.avatar||'🧑‍🎓',date:r,note,mood,hours:h});});});
-    feeds.sort((a,b)=>new Date(b.date)-new Date(a.date));const latest=feeds.slice(0,20);
-    if(!latest.length){c.innerHTML='<div class="empty-state" style="padding:20px;"><div class="msg">暂无研友动态<br>开始打卡后动态会自动出现</div></div>';return;}
-    c.innerHTML=latest.map(f=>`<div class="feed-item"><div class="fi-avatar">${f.avatar}</div><div class="fi-content"><div class="fi-name">${f.name} <span class="tag">打卡了</span></div><div class="fi-text">${f.mood} 学习了 ${f.hours.toFixed(1)} 小时${f.note?' · 「'+f.note+'」':''}</div><div class="fi-time">${f.date}</div></div></div>`).join('');
+let inStudyRoom = false;
+async function renderRoom() {
+    try {
+        const result = await api('/api/checkins/room');
+        const rows = result.users || [];
+        document.getElementById('onlineCount').textContent = rows.length;
+        const c = document.getElementById('roomUserList');
+        if (!rows.length) {
+            c.innerHTML = '<div class="empty-state" style="padding:20px;"><div class="msg">暂无在线研友</div></div>';
+            return;
+        }
+        c.innerHTML = rows.map(r => {
+            const h = (r.today_seconds || 0) / 3600;
+            return `<div class="room-user"><div class="ru-avatar">${r.avatar || '🧑‍🎓'}</div><div class="ru-name">${r.username}</div><div class="ru-status"><span class="dot"></span>学习中</div><div class="ru-hours">今日 ${h.toFixed(1)}h</div></div>`;
+        }).join('');
+    } catch (e) {
+        document.getElementById('roomUserList').innerHTML = '<div class="empty-state" style="padding:20px;"><div class="msg">无法连接服务器</div></div>';
+    }
+}
+function joinStudyRoom() {
+    if (!inStudyRoom) {
+        inStudyRoom = true;
+        document.getElementById('roomJoinBtn').textContent = '🚪 退出自习室';
+        document.getElementById('roomJoinBtn').style.background = 'var(--red)';
+        showToast('📚 已进入自习室！');
+        renderRoom();
+    } else {
+        inStudyRoom = false;
+        document.getElementById('roomJoinBtn').textContent = '🚪 进入自习室学习';
+        document.getElementById('roomJoinBtn').style.background = '';
+        showToast('👋 已退出自习室');
+    }
+}
+
+// ============================================================
+//  动态（云端）
+// ============================================================
+async function renderFeeds() {
+    const c = document.getElementById('feedList');
+    try {
+        const result = await api('/api/checkins/feed?limit=30');
+        const feeds = result.feeds || [];
+        if (!feeds.length) {
+            c.innerHTML = '<div class="empty-state" style="padding:20px;"><div class="msg">暂无研友动态<br>开始打卡后动态会自动出现</div></div>';
+            return;
+        }
+        c.innerHTML = feeds.map(f =>
+            `<div class="feed-item"><div class="fi-avatar">${f.avatar || '🧑‍🎓'}</div><div class="fi-content"><div class="fi-name">${f.username} <span class="tag">打卡了</span></div><div class="fi-text">${f.mood || '📌'} 学习了 ${(f.hours || 0).toFixed(1)} 小时${f.note ? ' · 「' + f.note + '」' : ''}</div><div class="fi-time">${f.date}</div></div></div>`
+        ).join('');
+    } catch (e) {
+        c.innerHTML = '<div class="empty-state" style="padding:20px;"><div class="msg">无法连接服务器</div></div>';
+    }
 }
 
 // ============================================================
 //  个人主页
 // ============================================================
-function renderProfile(){
-    if(!currentUserInfo)return;
-    document.getElementById('profileAvatar').textContent=currentUserInfo.avatar||'🧑‍🎓';
-    document.getElementById('profileName').textContent=currentUser;
-    document.getElementById('profileBio').textContent=currentUserInfo.bio||'考研人，正在努力中！';
-    document.getElementById('profileSchool').textContent='🎯 '+(data.targetSchool||'目标院校：未设置');
-    document.getElementById('profileDays').textContent=data.records.length;
-    document.getElementById('profileHours').textContent=getTotalHours().toFixed(1);
-    document.getElementById('profileStreak').textContent=calcBestStreak();
+function renderProfile() {
+    if (!currentUserInfo) return;
+    document.getElementById('profileAvatar').textContent = currentUserInfo.avatar || '🧑‍🎓';
+    document.getElementById('profileName').textContent = currentUser;
+    document.getElementById('profileBio').textContent = currentUserInfo.bio || '考研人，正在努力中！';
+    document.getElementById('profileSchool').textContent = '🎯 ' + (currentUserInfo.target_school || '目标院校：未设置');
+    document.getElementById('profileDays').textContent = data.records.length;
+    document.getElementById('profileHours').textContent = getTotalHours().toFixed(1);
+    document.getElementById('profileStreak').textContent = calcBestStreak();
 }
 
 // ============================================================
-//  待办事项
+//  待办事项（云端）
 // ============================================================
-function renderTodos(){
-    const c=document.getElementById('todoList');if(!data.todos||!data.todos.length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">📋 今天还没有任务，添加一个吧</div>';return;}
-    c.innerHTML=data.todos.map((t,i)=>{const done=data.todoDone&&data.todoDone[t];return `<div class="todo-item"><div class="todo-check ${done?'done':''}" onclick="toggleTodo(${i})">${done?'✓':''}</div><div class="todo-text ${done?'done':''}">${t}</div><div class="todo-del" onclick="delTodo(${i})">✕</div></div>`;}).join('');
+function renderTodos() {
+    const c = document.getElementById('todoList');
+    if (!data.todos || !data.todos.length) {
+        c.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">📋 今天还没有任务，添加一个吧</div>';
+        return;
+    }
+    c.innerHTML = data.todos.map((t, i) => {
+        const done = data.todoDone && data.todoDone[t];
+        return `<div class="todo-item"><div class="todo-check ${done ? 'done' : ''}" onclick="toggleTodo(${i})">${done ? '✓' : ''}</div><div class="todo-text ${done ? 'done' : ''}">${t}</div><div class="todo-del" onclick="delTodo(${i})">✕</div></div>`;
+    }).join('');
 }
-function addTodo(){const input=document.getElementById('todoInput');const t=input.value.trim();if(!t)return;if(!data.todos)data.todos=[];data.todos.push(t);if(!data.todoDone)data.todoDone={};saveData();renderTodos();input.value='';}
-function toggleTodo(i){const t=data.todos[i];if(!data.todoDone)data.todoDone={};data.todoDone[t]=!data.todoDone[t];saveData();renderTodos();if(data.todoDone[t])showToast('✅ '+t+' 完成！');}
-function delTodo(i){const t=data.todos[i];data.todos.splice(i,1);if(data.todoDone)delete data.todoDone[t];saveData();renderTodos();}
+async function addTodo() {
+    const input = document.getElementById('todoInput');
+    const text = input.value.trim();
+    if (!text) return;
+    try {
+        await api('/api/todos', { method: 'POST', body: JSON.stringify({ text }) });
+        await loadUserData();
+        renderTodos();
+        input.value = '';
+    } catch (e) { showToast('❌ 添加失败'); }
+}
+async function toggleTodo(i) {
+    const text = data.todos[i];
+    const done = !(data.todoDone && data.todoDone[text]);
+    if (!data.todoDone) data.todoDone = {};
+    data.todoDone[text] = done;
+    renderTodos();
+    try {
+        // 需要通过 text 找到服务器端的 todo id
+        const todos = await api('/api/todos');
+        const match = (todos.todos || []).find(t => t.text === text);
+        if (match) {
+            await api('/api/todos/' + match.id, { method: 'PUT', body: JSON.stringify({ done: done }) });
+        }
+    } catch (e) { /* 忽略 */ }
+}
+async function delTodo(i) {
+    const text = data.todos[i];
+    data.todos.splice(i, 1);
+    if (data.todoDone) delete data.todoDone[text];
+    renderTodos();
+    try {
+        const todos = await api('/api/todos');
+        const match = (todos.todos || []).find(t => t.text === text);
+        if (match) {
+            await api('/api/todos/' + match.id, { method: 'DELETE' });
+        }
+    } catch (e) { /* 忽略 */ }
+}
 
 // ============================================================
 //  统计弹窗
 // ============================================================
-function renderStatsModal(){
-    document.querySelector('.total-checkins').textContent=data.records.length;
-    document.querySelector('.total-hours').textContent=getTotalHours().toFixed(1);
-    document.querySelector('.best-streak').textContent=calcBestStreak();
-    const avg=data.records.length>0?(getTotalHours()/data.records.length):0;
-    document.querySelector('.avg-hours').textContent=avg.toFixed(1);
-    const now=new Date();const day=now.getDay();const ws=new Date(now);ws.setDate(now.getDate()-day);
-    const chart=document.getElementById('weekChart');const names=['日','一','二','三','四','五','六'];let mh=0;const vals=[];
-    for(let i=0;i<7;i++){const d=new Date(ws);d.setDate(ws.getDate()+i);const ds=getDateStr(d);const h=data.timerLogs.filter(l=>l.date===ds).reduce((s,l)=>s+l.seconds,0)/3600;vals.push(h);mh=Math.max(mh,h);}
-    if(mh===0)mh=1;
-    chart.innerHTML=vals.map((h,i)=>{const pct=(h/mh*100).toFixed(0);return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:4px;"><div class="mini-bar ${h>0?'filled':''} ${i===day?'today-bar':''}" style="height:${pct}%;"></div><span style="font-size:8px;color:var(--text3);">${names[i]}</span><span style="font-size:7px;color:var(--text3);font-weight:600;">${h.toFixed(1)}</span></div>`;}).join('');
-}
-
-// ============================================================
-//  设置
-// ============================================================
-function toggleNotification(){const t=document.getElementById('notificationToggle');t.classList.toggle('on');data.notificationEnabled=t.classList.contains('on');saveData();}
-function togglePrivacy(){const t=document.getElementById('privacyToggle');t.classList.toggle('on');data.privacyEnabled=t.classList.contains('on');if(data.privacyEnabled&&!data.passcode){showToast('🔒 请设置4位密码');openModal('passcodeModal');}saveData();}
-function saveTargetSchool(){const s=document.getElementById('targetSchoolInput').value.trim();if(s){data.targetSchool=s;saveData();showToast('🎯 目标院校已设置！');}}
-function saveDailyGoal(){const g=parseInt(document.getElementById('dailyGoalInput').value);if(g>0&&g<=24){data.dailyGoal=g;saveData();document.getElementById('dailyGoalDisplay').textContent='当前目标：'+g+' 小时/天';showToast('✅ 学习目标已更新');}}
-
-// ============================================================
-//  密码锁
-// ============================================================
-function inputPasscode(v){
-    if(v==='clear'){passcodeInput='';document.querySelectorAll('.passcode-dot').forEach(d=>d.classList.remove('filled'));return;}
-    if(v==='confirm'){
-        if(passcodeInput.length===4){
-            if(!data.passcode){data.passcode=passcodeInput;saveData();showToast('🔒 密码设置成功');closeModal('passcodeModal');}
-            else if(passcodeInput===data.passcode){privacyUnlocked=true;closeModal('passcodeModal');showToast('🔓 已解锁');}
-            else{showToast('❌ 密码错误');passcodeInput='';document.querySelectorAll('.passcode-dot').forEach(d=>d.classList.remove('filled'));}
-        }return;
+function renderStatsModal() {
+    document.querySelector('.total-checkins').textContent = data.records.length;
+    document.querySelector('.total-hours').textContent = getTotalHours().toFixed(1);
+    document.querySelector('.best-streak').textContent = calcBestStreak();
+    const avg = data.records.length > 0 ? (getTotalHours() / data.records.length) : 0;
+    document.querySelector('.avg-hours').textContent = avg.toFixed(1);
+    const now = new Date();
+    const day = now.getDay();
+    const ws = new Date(now); ws.setDate(now.getDate() - day);
+    const chart = document.getElementById('weekChart');
+    const names = ['日', '一', '二', '三', '四', '五', '六'];
+    let mh = 0;
+    const vals = [];
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(ws); d.setDate(ws.getDate() + i);
+        const ds = getDateStr(d);
+        const h = data.timerLogs.filter(l => l.date === ds).reduce((s, l) => s + (l.seconds || 0), 0) / 3600;
+        vals.push(h); mh = Math.max(mh, h);
     }
-    if(passcodeInput.length<4){passcodeInput+=v;document.querySelectorAll('.passcode-dot')[passcodeInput.length-1].classList.add('filled');}
+    if (mh === 0) mh = 1;
+    chart.innerHTML = vals.map((h, i) => {
+        const pct = (h / mh * 100).toFixed(0);
+        return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:4px;"><div class="mini-bar ${h > 0 ? 'filled' : ''} ${i === day ? 'today-bar' : ''}" style="height:${pct}%;"></div><span style="font-size:8px;color:var(--text3);">${names[i]}</span><span style="font-size:7px;color:var(--text3);font-weight:600;">${h.toFixed(1)}</span></div>`;
+    }).join('');
+
+    // 加载周报
+    if (CLOUD_TOKEN) {
+        api('/api/report').then(r => {
+            document.getElementById('weekReportHTML').innerHTML =
+                `<div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size:14px;font-weight:700;margin-bottom:8px;">📊 本周报告</div>
+                    <div style="font-size:12px;color:var(--text2);">学习天数：<b>${r.daysStudied}</b>天 · 时长：<b>${r.totalHours}h</b></div>
+                    ${r.testCount > 0 ? `<div style="font-size:12px;color:var(--text2);margin-top:4px;">测验：<b>${r.testCount}</b>次` + (r.bestScore > 0 ? ` · 最高：<b>${r.bestScore}</b>分` : '') + '</div>' : ''}
+                    ${Object.keys(r.subjectTime).length > 0 ? `<div style="font-size:12px;color:var(--text2);margin-top:4px;">` + Object.entries(r.subjectTime).map(([s, h]) => s + ': ' + h.toFixed(1) + 'h').join(' · ') + '</div>' : ''}
+                </div>`;
+        }).catch(() => {});
+    }
 }
 
 // ============================================================
-//  数据导入导出
+//  设置（兼容旧接口）
 // ============================================================
-function exportData(){
-    const b=new Blob([JSON.stringify({user:currentUser,data:data,exportTime:new Date().toISOString()},null,2)],{type:'application/json'});
-    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=currentUser+'_数据备份_'+getDateStr()+'.json';a.click();showToast('📤 数据已导出');
+async function saveTargetSchool() {
+    const s = document.getElementById('targetSchoolInput').value.trim();
+    if (!s) return;
+    try {
+        await api('/api/user/profile', {
+            method: 'PUT',
+            body: JSON.stringify({ school: currentUserInfo?.school || '', bio: currentUserInfo?.bio || '', target_school: s, daily_goal: currentUserInfo?.daily_goal || 4 })
+        });
+        if (currentUserInfo) currentUserInfo.target_school = s;
+        showToast('🎯 目标院校已设置！');
+    } catch (e) { showToast('❌ 保存失败'); }
 }
-function importData(){
-    const input=document.createElement('input');input.type='file';input.accept='.json';
-    input.onchange=function(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){try{const json=JSON.parse(ev.target.result);if(!json.data){showToast('❌ 文件格式不正确');return;}data.records=json.data.records||[];data.notes=json.data.notes||{};data.moods=json.data.moods||{};data.timerLogs=json.data.timerLogs||[];data.todos=json.data.todos||[];data.todoDone=json.data.todoDone||{};saveData();renderAll();showToast('📥 数据导入成功！');}catch(e){showToast('❌ 文件解析失败');}};reader.readAsText(file);};
-    input.click();
+async function saveDailyGoal() {
+    const g = parseInt(document.getElementById('dailyGoalInput').value);
+    if (g > 0 && g <= 24) {
+        try {
+            await api('/api/user/profile', {
+                method: 'PUT',
+                body: JSON.stringify({ school: currentUserInfo?.school || '', bio: currentUserInfo?.bio || '', target_school: currentUserInfo?.target_school || '', daily_goal: g })
+            });
+            if (currentUserInfo) currentUserInfo.daily_goal = g;
+            document.getElementById('dailyGoalDisplay').textContent = '当前目标：' + g + ' 小时/天';
+            showToast('✅ 学习目标已更新');
+        } catch (e) { showToast('❌ 保存失败'); }
+    }
 }
-function confirmReset(){if(confirm('⚠️ 确定要清除所有数据吗？此操作不可恢复！')){localStorage.removeItem(USERS_KEY);localStorage.removeItem(CURRENT_USER_KEY);location.reload();}}
 
 // ============================================================
-//  时钟 & 自动刷新 & 初始化
+//  数据导出（本地备份用）
 // ============================================================
-function updateClock(){const n=new Date();document.getElementById('statusTime').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
-setInterval(()=>{if(document.getElementById('pageRoom').classList.contains('active')){renderRoom();renderFeeds();}},10000);
-(function init(){updateClock();setInterval(updateClock,30000);if(!initUserSession()){renderUserDropdown();}document.addEventListener('click',function(e){const dd=document.getElementById('userDropdown');const sw=document.getElementById('userSwitcher');if(dd.classList.contains('show')&&!dd.contains(e.target)&&!sw.contains(e.target))dd.classList.remove('show');});})();
+function exportData() {
+    const b = new Blob([JSON.stringify({ user: currentUser, data: data, exportTime: new Date().toISOString() }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+    a.download = currentUser + '_数据备份_' + getDateStr() + '.json';
+    a.click();
+    showToast('📤 数据已导出');
+}
 
-// Delete stray function that conflicts with the rest of code
-if(typeof setPomoMode !== 'function'){}
+// ============================================================
+//  时钟 & 初始化
+// ============================================================
+function updateClock() {
+    const n = new Date();
+    document.getElementById('statusTime').textContent = String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0');
+}
 
+// 定期刷新自习室和动态
+setInterval(() => {
+    if (document.getElementById('pageRoom').classList.contains('active')) {
+        renderRoom(); renderFeeds();
+    }
+}, 15000);
+
+// 启动
+(async function init() {
+    updateClock();
+    setInterval(updateClock, 30000);
+
+    // 尝试自动登录
+    if (CLOUD_TOKEN) {
+        try {
+            const profile = await api('/api/user/profile');
+            currentUser = profile.user.username;
+            currentUserInfo = profile.user;
+            data = {
+                records: profile.data.records || [],
+                notes: profile.data.notes || {},
+                moods: profile.data.moods || {},
+                reflections: profile.data.reflections || {},
+                timerLogs: profile.data.timerLogs || [],
+                todos: profile.data.todos || [],
+                todoDone: profile.data.todoDone || {},
+                scores: profile.data.scores || [],
+                todayPlan: profile.data.todayPlan || null
+            };
+            document.getElementById('authOverlay').classList.add('hidden');
+            updateUserUI();
+            renderAll();
+        } catch (e) {
+            // token 过期，清除
+            localStorage.removeItem('cloud_token');
+            CLOUD_TOKEN = '';
+            document.getElementById('authOverlay').classList.remove('hidden');
+        }
+    } else {
+        document.getElementById('authOverlay').classList.remove('hidden');
+    }
+
+    // 点击外部关闭下拉
+    document.addEventListener('click', function (e) {
+        const dd = document.getElementById('userDropdown');
+        const sw = document.getElementById('userSwitcher');
+        if (dd.classList.contains('show') && !dd.contains(e.target) && !sw.contains(e.target))
+            dd.classList.remove('show');
+    });
+})();
 </script>
 </body>
 </html>
