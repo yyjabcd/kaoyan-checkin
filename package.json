@@ -1,0 +1,13 @@
+{
+  "name": "kaoyan-together",
+  "version": "3.1.0",
+  "description": "研友同行 - 考研云端多人学习平台",
+  "private": true,
+  "scripts": {
+    "start": "cd server && npm start",
+    "build": "cd server && npm install"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
